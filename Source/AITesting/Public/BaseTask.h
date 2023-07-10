@@ -17,11 +17,14 @@ class AITESTING_API UBaseTask : public UObject
 	GENERATED_BODY()
 
 public:
-	// UFUNCTION(BlueprintCallable)
-	// void Foo();
+	UFUNCTION(BlueprintCallable)
+	void Foo();
 	
-	// void Bar(float value);
+	void Bar(float value);
 	
 	UFUNCTION(BlueprintCallable)
 	void FooWithAsync();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void Execute();
 };

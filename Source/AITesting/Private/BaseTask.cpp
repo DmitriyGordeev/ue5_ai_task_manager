@@ -3,28 +3,28 @@
 
 #include "BaseTask.h"
 
-// void UBaseTask::Foo()
-// {
-// 	FTimerHandle TimerHandle;
-//
-// 	// // with class method:
-// 	// FTimerDelegate TimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::Bar, 1.12f);
-// 	// GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 1.0f, true, -1.0f);
-//
-// 	// with Lambda expression:
-// 	auto Callback = [](float value)
-// 	{
-// 		UE_LOG(LogTemp, Log, TEXT("Bar function %f"), value);
-// 	};
-// 	FTimerDelegate TimerDelegate = FTimerDelegate::CreateWeakLambda(this, Callback, 1.0f);
-// 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 1.0f, true);
-// }
-//
-// void UBaseTask::Bar(float value)
-// {
-// 	UE_LOG(LogTemp, Log, TEXT("Bar function %f"), value);
-// }
-//
+void UBaseTask::Foo()
+{
+	// FTimerHandle TimerHandle;
+	//
+	// // // with class method:
+	// // FTimerDelegate TimerDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::Bar, 1.12f);
+	// // GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 1.0f, true, -1.0f);
+	//
+	// // with Lambda expression:
+	// auto Callback = [](float value)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("Bar function %f"), value);
+	// };
+	// FTimerDelegate TimerDelegate = FTimerDelegate::CreateWeakLambda(this, Callback, 1.0f);
+	// GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 1.0f, true);
+}
+
+void UBaseTask::Bar(float value)
+{
+	// UE_LOG(LogTemp, Log, TEXT("Bar function %f"), value);
+}
+
 
 
 void UBaseTask::FooWithAsync()
@@ -47,8 +47,6 @@ void UBaseTask::FooWithAsync()
 	// 		UE_LOG(LogTemp, Log, TEXT("Finished"));
 	// 	});
 	// });
-
-
 
 	AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, []
 	{
@@ -73,3 +71,8 @@ void UBaseTask::FooWithAsync()
 	UE_LOG(LogTemp, Log, TEXT("FooWithAsync finished, but AsyncTask is probably running"));
 }
 
+
+void UBaseTask::Execute_Implementation()
+{
+	UE_LOG(LogTemp, Log, TEXT("Execute implementation"));
+}
