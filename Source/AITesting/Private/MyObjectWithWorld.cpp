@@ -6,6 +6,8 @@
 
 UWorld* UMyObjectWithWorld::GetWorld() const
 {
+	UE_LOG(LogTemp, Log, TEXT("Start GetWorld()"));
+	
 	// Return null if called from the CDO, or if the outer is being destroyed
 	if (!HasAnyFlags(RF_ClassDefaultObject) &&
 		!GetOuter()->HasAnyFlags(RF_BeginDestroyed) &&
@@ -15,11 +17,13 @@ UWorld* UMyObjectWithWorld::GetWorld() const
 		AActor* Outer = GetTypedOuter<AActor>();
 		if (Outer != nullptr)
 		{
+			UE_LOG(LogTemp, Display, TEXT("Sucessfully GetWorld()"));
 			return Outer->GetWorld();
 		}
 	}
 	
 	// Else return null - the latent action will fail to initialize
+	UE_LOG(LogTemp, Display, TEXT("World is null"));
 	return nullptr;
 }
 
