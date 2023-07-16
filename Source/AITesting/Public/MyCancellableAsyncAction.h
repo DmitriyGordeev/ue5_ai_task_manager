@@ -26,6 +26,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FMyDelayAsyncActionEvent OnFail;
 
+	UPROPERTY(BlueprintAssignable)
+	FMyDelayAsyncActionEvent OnInterrupted;
+
 	virtual void Activate() override;
 	virtual void Cancel() override;
 

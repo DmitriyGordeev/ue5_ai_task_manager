@@ -6,6 +6,8 @@
 #include "UObject/NoExportTypes.h"
 #include "CustomTickableObject.generated.h"
 
+// DECLARE_DYNAMIC_MULTICAST_DELEGATE(FActionEvent);
+
 /**
  * 
  */
@@ -15,11 +17,9 @@ class AITESTING_API UCustomTickableObject : public UObject, public FTickableGame
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable)
-	void CallTimer(float Delay);
-
-	void TestTimer();
-
+	// UFUNCTION(DisplayName="CustomTickable", BlueprintCallable, meta=(WorldContext="WorldContext"))
+	// static void CustomTickable(const UObject* WorldContext, FString& Message);
+	
 	virtual void Tick(float DeltaTime) override;
 	virtual bool IsTickable() const override;
 	virtual bool IsTickableInEditor() const override;
@@ -27,6 +27,4 @@ public:
 
 	virtual TStatId GetStatId() const override;
 	virtual UWorld* GetWorld() const override;
-
-	float TestCounter;
 };

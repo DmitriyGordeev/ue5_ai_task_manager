@@ -18,7 +18,7 @@ UMyCancellableAsyncAction* UMyCancellableAsyncAction::MyCancellableAsyncAction(c
 	UMyCancellableAsyncAction* NewAction = NewObject<UMyCancellableAsyncAction>();
 	NewAction->ContextWorld = ContextW;
 	NewAction->DelayTime = DelayTime;
-	NewAction->RegisterWithGameInstance(ContextW->GetGameInstance());
+	// NewAction->RegisterWithGameInstance(ContextW->GetGameInstance());
 	return NewAction;
 }
 
