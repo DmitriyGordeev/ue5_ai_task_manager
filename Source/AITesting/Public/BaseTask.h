@@ -7,6 +7,8 @@
 // #include "Async/Async.h"
 #include "BaseTask.generated.h"
 
+// TODO: DECLARE_DYNAMIC_DELEGATE(FEventDelegate);
+// DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBaseTaskDelegate);
 
 /**
  * 

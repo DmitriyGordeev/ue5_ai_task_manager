@@ -14,6 +14,7 @@ UCustomAsyncTask* UCustomAsyncTask::CreateCustomAsyncTask(const UObject* WorldCo
 void UCustomAsyncTask::Tick(float DeltaTime)
 {
 	UE_LOG(LogTemp, Log, TEXT("CustomTickable Tick"));
+	this->OnUpdate.Broadcast();
 }
 
 bool UCustomAsyncTask::IsTickable() const
