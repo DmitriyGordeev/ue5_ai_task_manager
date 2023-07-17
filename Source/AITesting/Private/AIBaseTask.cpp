@@ -5,9 +5,23 @@
 
 void UAIBaseTask::Start()
 {
+	Reset();
 	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask::Start()"));
 	bStarted = true;
 	OnExecute();
+}
+
+float UAIBaseTask::FindProba()
+{
+	Proba = 1.0f;
+	return Proba;
+}
+
+void UAIBaseTask::Reset()
+{
+	bStarted = false;
+	bCompleted = false;
+	bInterrupted = false;
 }
 
 void UAIBaseTask::Tick(float DeltaTime)
@@ -77,4 +91,22 @@ UWorld* UAIBaseTask::GetWorld() const
 	return nullptr;
 }
 
+
+bool UAIBaseTask::IsCompleted() const
+{
+	UE_LOG(LogTemp, Log, TEXT("IsCompleted() = %i"), bCompleted);
+	return bCompleted;
+}
+
+bool UAIBaseTask::IsInterrupted() const
+{
+	UE_LOG(LogTemp, Log, TEXT("IsInterrupted() = %i"), bInterrupted);
+	return bInterrupted;
+}
+
+float UAIBaseTask::GetProba() const
+{
+	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask::FindProba()"));
+	return Proba;
+}
 

@@ -33,6 +33,8 @@ public:
 
 	// TODO: keep AIC as Outer (Owner) to keep for WorldContext ?
 	
+	virtual float FindProba();
+	
 	virtual void Tick(float DeltaTime) override;
 	virtual bool IsTickable() const override;
 	virtual bool IsTickableInEditor() const override;
@@ -47,8 +49,16 @@ public:
 	virtual TStatId GetStatId() const override;
 	virtual UWorld* GetWorld() const override;
 
+	virtual bool IsCompleted() const;
+	virtual bool IsInterrupted() const;
+
+	virtual float GetProba() const;
+
 protected:
+	virtual void Reset();
+	
 	bool bStarted {false};
 	bool bCompleted {false};
 	bool bInterrupted {false};
+	float Proba {0.0f};
 };
