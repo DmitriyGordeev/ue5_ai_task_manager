@@ -35,10 +35,17 @@ public:
 	// OnBeforeTaskChange
 	// OnAfterTaskChange
 
-protected:
+	// TODO: move to protected
 	UPROPERTY(BlueprintReadWrite)
 	TArray<UAIBaseTask*> Tasks;
 
+	// TODO: move to protected
 	UPROPERTY(BlueprintReadWrite)
 	UAIBaseTask* ActiveTask;
+
+	
+protected:
+	
+
+	
 };

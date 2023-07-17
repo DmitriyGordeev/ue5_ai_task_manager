@@ -11,7 +11,7 @@ void UAIBaseTask::Start()
 	OnExecute();
 }
 
-float UAIBaseTask::FindProba()
+float UAIBaseTask::FindProba_Implementation()
 {
 	Proba = 1.0f;
 	return Proba;
@@ -26,7 +26,7 @@ void UAIBaseTask::Reset()
 
 void UAIBaseTask::Tick(float DeltaTime)
 {
-	UE_LOG(LogTemp, Log, TEXT("CustomTickable Tick"));
+	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask Tick"));
 	OnTick();
 }
 

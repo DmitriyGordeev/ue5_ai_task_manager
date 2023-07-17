@@ -7,6 +7,7 @@
 void UAITaskManager::Start()
 {
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Start()"));
+	Recalculate();
 }
 
 void UAITaskManager::Recalculate()

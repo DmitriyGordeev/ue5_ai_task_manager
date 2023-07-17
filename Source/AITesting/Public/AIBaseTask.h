@@ -33,7 +33,8 @@ public:
 
 	// TODO: keep AIC as Outer (Owner) to keep for WorldContext ?
 	
-	virtual float FindProba();
+	UFUNCTION(BlueprintNativeEvent)
+	float FindProba();
 	
 	virtual void Tick(float DeltaTime) override;
 	virtual bool IsTickable() const override;
