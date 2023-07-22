@@ -68,9 +68,14 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	TWeakObjectPtr<UAITaskManager> TaskManager;
-	
+
+	UPROPERTY(BlueprintReadOnly)
 	bool bStarted {false};
+
+	UPROPERTY(BlueprintReadOnly)
 	bool bCompleted {false};
+
+	UPROPERTY(BlueprintReadOnly)
 	bool bInterrupted {false};
 	float Proba {0.0f};
 };

@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AIBaseTask.h"
 #include "AITaskManager.h"
+#include "GenericPlatform/GenericPlatformProcess.h"
 
 
 void UAITaskManager::Start()
@@ -38,7 +38,7 @@ void UAITaskManager::Recalculate()
 	Winner->Start();
 }
 
-bool UAITaskManager::TryInterruptActive()
+bool UAITaskManager::TryInterruptActiveTask()
 {
 	UE_LOG(LogTemp, Log, TEXT("RequestInterruptActive"));
 	if (!ActiveTask)
@@ -47,11 +47,32 @@ bool UAITaskManager::TryInterruptActive()
 	if (AIOwner.IsValid())
 		ActiveTask->OnInterruptedResponse(AIOwner.Get());
 	
-	// TODO: как работать с долгим InterruptedResponse() ?
-	//	юзер может вызывать асинхронные функции
+	// // TODO: как работать с долгим InterruptedResponse() ?
+	// //	юзер может вызывать асинхронные функции
+	//
+	// // if (ActiveTask->IsInterrupted())
+	// // 	return true;
+	//
+	// while(!ActiveTask->IsInterrupted())
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("waiting until interrupted"));
+	// }
+	
+	AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, []
+	{
+		UE_LOG(LogTemp, Log, TEXT("AsyncTask Sleep starts"));
+		
+		FGenericPlatformProcess::ConditionalSleep(
+			[]{return true;},
+			2.5f);
 
-	if (ActiveTask->IsInterrupted())
-		return true;
+		UE_LOG(LogTemp, Log, TEXT("AsyncTask Sleep finished"));
+		
+		// AsyncTask(ENamedThreads::GameThread, []
+		// {
+		// 	UE_LOG(LogTemp, Log, TEXT("AsyncTask Response to the GameThread, value = %i"));
+		// });
+	});
 
 	return false;
 }

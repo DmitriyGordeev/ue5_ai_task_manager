@@ -36,7 +36,7 @@ public:
 	/* Asks current task for interruption - it's up to Task to respond:
 	 * if task hasn't responded - it's continue running until marked Completed */
 	UFUNCTION(BlueprintCallable)
-	virtual bool TryInterruptActive();
+	virtual bool TryInterruptActiveTask();
 	
 	// virtual void Tick();
 	
