@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "AIBaseTask.h"
 #include "AIController.h"
-#include "UObject/NoExportTypes.h"
 #include "AITaskManager.generated.h"
 
 
@@ -24,7 +23,7 @@ public:
 	// нужно было включить AIModule в *.Build.cs
 	// иначе доступ к AAIController вызовет 'unresolved external symbol error'
 	UPROPERTY(BlueprintReadWrite)
-	AAIController* AIOwner;
+	TWeakObjectPtr<AAIController> AIOwner;
 	
 	/* TaskManager's entry point (equivalent of RunBehaviorTree) */
 	UFUNCTION(BlueprintCallable)
@@ -44,6 +43,8 @@ public:
 	// OnBeforeTaskChange
 	// OnAfterTaskChange
 
+	UFUNCTION(BlueprintCallable)
+	void AddTask(UAIBaseTask* Task);
 	
 	// TODO: move to protected
 	UPROPERTY(BlueprintReadWrite)

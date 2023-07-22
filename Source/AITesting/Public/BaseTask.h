@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AITaskManager.h"
 #include "UObject/NoExportTypes.h"
 // #include "Async/Async.h"
 #include "BaseTask.generated.h"
@@ -29,4 +30,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Execute();
+
+	UPROPERTY(BlueprintReadOnly)
+	TWeakObjectPtr<UAITaskManager> TaskManager;
 };

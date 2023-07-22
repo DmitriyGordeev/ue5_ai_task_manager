@@ -34,8 +34,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void Start();
-
-	// TODO: keep AIC as Outer (Owner) to keep for WorldContext ?
 	
 	UFUNCTION(BlueprintNativeEvent)
 	float FindProba();
@@ -59,8 +57,8 @@ public:
 
 	virtual float GetProba() const;
 
-	// UFUNCTION(BlueprintCallable)
-	// AAIController* GetAIController() const;
+	UFUNCTION()
+	void SetTaskManager(UAITaskManager* TaskManager);
 
 protected:
 	virtual void Reset();

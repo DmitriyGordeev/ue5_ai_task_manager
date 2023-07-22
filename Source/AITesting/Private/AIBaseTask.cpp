@@ -112,11 +112,8 @@ float UAIBaseTask::GetProba() const
 	return Proba;
 }
 
-// AAIController* UAIBaseTask::GetAIController() const
-// {
-// 	if (!TaskManager.IsValid())
-// 		return nullptr;
-//
-// 	return TaskManager.Get()->AIController;
-// }
+void UAIBaseTask::SetTaskManager(UAITaskManager* OwnerTaskManager)
+{
+	TaskManager = OwnerTaskManager;
+}
 

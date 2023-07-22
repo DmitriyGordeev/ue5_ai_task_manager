@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "AIBaseTask.h"
 #include "AITaskManager.h"
 
 
@@ -12,14 +13,6 @@ void UAITaskManager::Start()
 
 void UAITaskManager::Recalculate()
 {
-	
-	// if (UObject* OuterObject = GetOuter())
-	// {
-	// 	AAIController* AIC = Cast<AAIController>(OuterObject);
-	// 	UE_LOG(LogTemp, Log, TEXT("OuterName = %s"), *AIC->GetName());
-	// }
-
-	
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate()"));
 	if (Tasks.IsEmpty())
 		return;
@@ -60,4 +53,13 @@ bool UAITaskManager::TryInterruptActive()
 		return true;
 
 	return false;
+}
+
+void UAITaskManager::AddTask(UAIBaseTask* Task)
+{
+	if (!Task)
+		return;
+	Task->SetTaskManager(this);
+	Tasks.Add(Task);
+	UE_LOG(LogTemp, Log, TEXT("Task was added"));
 }
