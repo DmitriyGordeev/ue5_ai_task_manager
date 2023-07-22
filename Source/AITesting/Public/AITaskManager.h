@@ -14,7 +14,7 @@ class AAIController;
  * 
  */
 UCLASS(Blueprintable)
-class AITESTING_API UAITaskManager : public UObject
+class AITESTING_API UAITaskManager : public UObject, public FTickableGameObject
 {
 	GENERATED_BODY()
 
@@ -51,8 +51,21 @@ public:
 	UAIBaseTask* ActiveTask;
 
 
+	// -------- FTickableGameObject functions --------------
+	virtual void Tick(float DeltaTime) override;
+	virtual bool IsTickable() const override;
+	virtual bool IsTickableInEditor() const override;
+	virtual bool IsTickableWhenPaused() const override;
+	virtual TStatId GetStatId() const override;
+	virtual UWorld* GetWorld() const override;
+
+	
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	TArray<UAIBaseTask*> Tasks;
 	
+	bool bStarted {false};
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bWaitingForActiveTaskInterrupted {false};
 };

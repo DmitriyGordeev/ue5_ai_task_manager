@@ -29,6 +29,7 @@ void UAIBaseTask::Reset()
 void UAIBaseTask::Tick(float DeltaTime)
 {
 	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask Tick"));
+	// TODO: if (!Interrupted() and !Completed()) ?
 	OnTick(GetAIController());
 }
 

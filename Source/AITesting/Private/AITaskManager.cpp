@@ -7,7 +7,7 @@
 
 void UAITaskManager::Start()
 {
-	UE_LOG(LogTemp, Log, TEXT("TaskManager::Start()"));
+	bStarted = true;
 	Recalculate();
 }
 
@@ -41,40 +41,14 @@ void UAITaskManager::Recalculate()
 bool UAITaskManager::TryInterruptActiveTask()
 {
 	UE_LOG(LogTemp, Log, TEXT("RequestInterruptActive"));
+	bWaitingForActiveTaskInterrupted = true;
 	if (!ActiveTask)
 		return true;
 
 	if (AIOwner.IsValid())
 		ActiveTask->OnInterruptedResponse(AIOwner.Get());
-	
-	// // TODO: как работать с долгим InterruptedResponse() ?
-	// //	юзер может вызывать асинхронные функции
-	//
-	// // if (ActiveTask->IsInterrupted())
-	// // 	return true;
-	//
-	// while(!ActiveTask->IsInterrupted())
-	// {
-	// 	UE_LOG(LogTemp, Log, TEXT("waiting until interrupted"));
-	// }
-	
-	AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, []
-	{
-		UE_LOG(LogTemp, Log, TEXT("AsyncTask Sleep starts"));
-		
-		FGenericPlatformProcess::ConditionalSleep(
-			[]{return true;},
-			2.5f);
 
-		UE_LOG(LogTemp, Log, TEXT("AsyncTask Sleep finished"));
-		
-		// AsyncTask(ENamedThreads::GameThread, []
-		// {
-		// 	UE_LOG(LogTemp, Log, TEXT("AsyncTask Response to the GameThread, value = %i"));
-		// });
-	});
-
-	return false;
+	return ActiveTask->IsInterrupted();
 }
 
 void UAITaskManager::AddTask(UAIBaseTask* Task)
@@ -84,4 +58,64 @@ void UAITaskManager::AddTask(UAIBaseTask* Task)
 	Task->SetTaskManager(this);
 	Tasks.Add(Task);
 	UE_LOG(LogTemp, Log, TEXT("Task was added"));
+}
+
+
+void UAITaskManager::Tick(float DeltaTime)
+{
+	// TODO: expose tick frequency float (time sec)
+
+	UE_LOG(LogTemp, Log, TEXT("TaskManager tick"));
+	if (!bStarted)
+		return;
+
+	if (ActiveTask && bWaitingForActiveTaskInterrupted)
+	{
+		if (ActiveTask->IsCompleted() || ActiveTask->IsInterrupted())
+		{
+			UE_LOG(LogTemp, Log, TEXT("Task Interrupted"));
+			bWaitingForActiveTaskInterrupted = false;
+			
+			// TODO: action (Recalculate?)
+			
+		}
+	}
+}
+
+bool UAITaskManager::IsTickable() const
+{
+	return !IsTemplate(RF_ClassDefaultObject) && bStarted;
+}
+
+bool UAITaskManager::IsTickableInEditor() const
+{
+	return false;
+}
+
+bool UAITaskManager::IsTickableWhenPaused() const
+{
+	return false;
+}
+
+TStatId UAITaskManager::GetStatId() const
+{
+	return TStatId();
+}
+
+UWorld* UAITaskManager::GetWorld() const
+{
+	// Return null if called from the CDO, or if the outer is being destroyed
+	if (!HasAnyFlags(RF_ClassDefaultObject) &&
+		!GetOuter()->HasAnyFlags(RF_BeginDestroyed) &&
+		!GetOuter()->IsUnreachable())
+	{
+		// Try to get the world from the owning actor if we have one
+		AActor* Outer = GetTypedOuter<AActor>();
+		if (Outer != nullptr)
+		{
+			return Outer->GetWorld();
+		}
+	}
+	// Else return null - the latent action will fail to initialize
+	return nullptr;
 }
