@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIBaseTask.h"
-// #include "AIController.h"
+#include "AIController.h"
 #include "UObject/NoExportTypes.h"
 #include "AITaskManager.generated.h"
 
@@ -20,9 +20,11 @@ class AITESTING_API UAITaskManager : public UObject
 	GENERATED_BODY()
 
 public:
-
-	// UPROPERTY(Transient)
-	// TObjectPtr<AAIController> AIOwner {nullptr};
+	
+	// нужно было включить AIModule в *.Build.cs
+	// иначе доступ к AAIController вызовет 'unresolved external symbol error'
+	UPROPERTY(BlueprintReadWrite)
+	AAIController* AIOwner;
 	
 	/* TaskManager's entry point (equivalent of RunBehaviorTree) */
 	UFUNCTION(BlueprintCallable)
@@ -43,13 +45,11 @@ public:
 	// OnAfterTaskChange
 
 	
-
 	// TODO: move to protected
 	UPROPERTY(BlueprintReadWrite)
 	UAIBaseTask* ActiveTask;
 
-	
-	
+
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	TArray<UAIBaseTask*> Tasks;

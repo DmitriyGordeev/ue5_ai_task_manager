@@ -12,6 +12,14 @@ void UAITaskManager::Start()
 
 void UAITaskManager::Recalculate()
 {
+	
+	// if (UObject* OuterObject = GetOuter())
+	// {
+	// 	AAIController* AIC = Cast<AAIController>(OuterObject);
+	// 	UE_LOG(LogTemp, Log, TEXT("OuterName = %s"), *AIC->GetName());
+	// }
+
+	
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate()"));
 	if (Tasks.IsEmpty())
 		return;
