@@ -3,11 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+// #include "AITaskManager.h"
 #include "UObject/NoExportTypes.h"
 #include "AIBaseTask.generated.h"
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEventDelegate);
+
+class AAIController;
+class UAITaskManager;
 
 /**
  * 
@@ -55,8 +59,14 @@ public:
 
 	virtual float GetProba() const;
 
+	// UFUNCTION(BlueprintCallable)
+	// AAIController* GetAIController() const;
+
 protected:
 	virtual void Reset();
+
+	UPROPERTY(BlueprintReadOnly)
+	TWeakObjectPtr<UAITaskManager> TaskManager;
 	
 	bool bStarted {false};
 	bool bCompleted {false};

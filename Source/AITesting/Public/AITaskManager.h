@@ -4,8 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "AIBaseTask.h"
+// #include "AIController.h"
 #include "UObject/NoExportTypes.h"
 #include "AITaskManager.generated.h"
+
+
+class AAIController;
 
 /**
  * 
@@ -16,6 +20,9 @@ class AITESTING_API UAITaskManager : public UObject
 	GENERATED_BODY()
 
 public:
+
+	// UPROPERTY(Transient)
+	// TObjectPtr<AAIController> AIOwner {nullptr};
 	
 	/* TaskManager's entry point (equivalent of RunBehaviorTree) */
 	UFUNCTION(BlueprintCallable)
@@ -35,17 +42,16 @@ public:
 	// OnBeforeTaskChange
 	// OnAfterTaskChange
 
-	// TODO: move to protected
-	UPROPERTY(BlueprintReadWrite)
-	TArray<UAIBaseTask*> Tasks;
+	
 
 	// TODO: move to protected
 	UPROPERTY(BlueprintReadWrite)
 	UAIBaseTask* ActiveTask;
 
 	
-protected:
 	
-
+protected:
+	UPROPERTY(BlueprintReadWrite)
+	TArray<UAIBaseTask*> Tasks;
 	
 };

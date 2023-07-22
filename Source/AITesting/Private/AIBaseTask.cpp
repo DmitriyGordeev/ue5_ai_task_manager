@@ -3,6 +3,8 @@
 
 #include "AIBaseTask.h"
 
+#include "AITaskManager.h"
+
 void UAIBaseTask::Start()
 {
 	Reset();
@@ -109,4 +111,12 @@ float UAIBaseTask::GetProba() const
 	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask::FindProba()"));
 	return Proba;
 }
+
+// AAIController* UAIBaseTask::GetAIController() const
+// {
+// 	if (!TaskManager.IsValid())
+// 		return nullptr;
+//
+// 	return TaskManager.Get()->AIController;
+// }
 
