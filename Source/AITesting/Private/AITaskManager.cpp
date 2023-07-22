@@ -43,8 +43,9 @@ bool UAITaskManager::TryInterruptActive()
 	UE_LOG(LogTemp, Log, TEXT("RequestInterruptActive"));
 	if (!ActiveTask)
 		return true;
-	
-	ActiveTask->OnInterruptedResponse();
+
+	if (AIOwner.IsValid())
+		ActiveTask->OnInterruptedResponse(AIOwner.Get());
 	
 	// TODO: как работать с долгим InterruptedResponse() ?
 	//	юзер может вызывать асинхронные функции

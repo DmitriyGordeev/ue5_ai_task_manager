@@ -24,13 +24,13 @@ class AITESTING_API UAIBaseTask : public UObject, public FTickableGameObject
 public:
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnExecute();
+	void OnExecute(AAIController* Controller);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnTick();
+	void OnTick(AAIController* Controller);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnInterruptedResponse();
+	void OnInterruptedResponse(AAIController* Controller);
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void Start();
@@ -59,7 +59,10 @@ public:
 
 	UFUNCTION()
 	void SetTaskManager(UAITaskManager* TaskManager);
-
+	
+	UFUNCTION(BlueprintCallable)
+	AAIController* GetAIController();
+	
 protected:
 	virtual void Reset();
 

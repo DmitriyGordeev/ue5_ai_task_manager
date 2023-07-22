@@ -10,7 +10,7 @@ void UAIBaseTask::Start()
 	Reset();
 	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask::Start()"));
 	bStarted = true;
-	OnExecute();
+	OnExecute(GetAIController());
 }
 
 float UAIBaseTask::FindProba_Implementation()
@@ -29,7 +29,7 @@ void UAIBaseTask::Reset()
 void UAIBaseTask::Tick(float DeltaTime)
 {
 	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask Tick"));
-	OnTick();
+	OnTick(GetAIController());
 }
 
 bool UAIBaseTask::IsTickable() const
@@ -115,5 +115,13 @@ float UAIBaseTask::GetProba() const
 void UAIBaseTask::SetTaskManager(UAITaskManager* OwnerTaskManager)
 {
 	TaskManager = OwnerTaskManager;
+}
+
+AAIController* UAIBaseTask::GetAIController()
+{
+	if (!TaskManager.IsValid())
+		return nullptr;
+
+	return TaskManager->AIOwner.Get();
 }
 
