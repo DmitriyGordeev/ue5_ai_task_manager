@@ -27,11 +27,11 @@ public:
 	
 	/* TaskManager's entry point (equivalent of RunBehaviorTree) */
 	UFUNCTION(BlueprintCallable)
-	virtual void Start();
+	virtual void Start(UObject* ContextData);
 
 	/* Find next relevant task to execute */
 	UFUNCTION(BlueprintCallable)
-	virtual void Recalculate();
+	virtual void Recalculate(UObject* ContextData);
 	
 	/* Asks current task for interruption - it's up to Task to respond:
 	 * if task hasn't responded - it's continue running until marked Completed */

@@ -1,19 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AIBaseTask.h"
-
 #include "AITaskManager.h"
+
+
+// TODO: сделать общие коментарии после тестов
+
 
 void UAIBaseTask::Start()
 {
 	Reset();
 	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask::Start()"));
-	bStarted = true;
+	bRunning = true;
 	OnExecute(GetAIController());
 }
 
-float UAIBaseTask::FindProba_Implementation()
+float UAIBaseTask::FindProba_Implementation(UObject* ContextData)
 {
 	Proba = 1.0f;
 	return Proba;
@@ -21,7 +23,7 @@ float UAIBaseTask::FindProba_Implementation()
 
 void UAIBaseTask::Reset()
 {
-	bStarted = false;
+	bRunning = false;
 	bCompleted = false;
 	bInterrupted = false;
 }
@@ -35,7 +37,14 @@ void UAIBaseTask::Tick(float DeltaTime)
 
 bool UAIBaseTask::IsTickable() const
 {
-	return !IsTemplate(RF_ClassDefaultObject) && bStarted;
+	// TODO: ошибка в том, что bStarted у AIMove равна True
+	bool TickableCheck = !IsTemplate(RF_ClassDefaultObject) && bRunning && !bCompleted && !bInterrupted;
+	// UE_LOG(LogTemp, Log, TEXT("%s !CDO = %i"), *GetName(), !IsTemplate(RF_ClassDefaultObject));
+	// UE_LOG(LogTemp, Log, TEXT("%s bRunning = %i"), *GetName(), bRunning);
+	// UE_LOG(LogTemp, Log, TEXT("%s !bCompleted = %i"), *GetName(), !bCompleted);
+	// UE_LOG(LogTemp, Log, TEXT("%s !bInterrupted = %i"), *GetName(), !bInterrupted);
+	
+	return TickableCheck;
 }
 
 bool UAIBaseTask::IsTickableInEditor() const
@@ -53,7 +62,7 @@ void UAIBaseTask::MarkCompleted()
 	bCompleted = true;
 	UE_LOG(LogTemp, Log, TEXT("Task marked as completed"));
 	
-	// TODO: notify up to TaskManager
+	// TODO: notify up to TaskManager ?
 }
 
 
@@ -62,7 +71,7 @@ void UAIBaseTask::MarkInterrupted()
 	bInterrupted = true;
 	UE_LOG(LogTemp, Log, TEXT("Task marked as interrupted"));
 	
-	// TODO: notify up to TaskManager
+	// TODO: notify up to TaskManager ?
 }
 
 

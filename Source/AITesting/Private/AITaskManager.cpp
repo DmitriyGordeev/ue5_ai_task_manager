@@ -5,17 +5,23 @@
 #include "GenericPlatform/GenericPlatformProcess.h"
 
 
-void UAITaskManager::Start()
+// TODO: сделать общие коментарии после тестов
+
+
+void UAITaskManager::Start(UObject* ContextData)
 {
 	bStarted = true;
-	Recalculate();
+	Recalculate(ContextData);
 }
 
-void UAITaskManager::Recalculate()
+void UAITaskManager::Recalculate(UObject* ContextData)
 {
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate()"));
 	if (Tasks.IsEmpty())
 		return;
+
+	if (ActiveTask)
+		ActiveTask->Reset();
 
 	float MaxProba = 0.0f;
 	UAIBaseTask* Winner = nullptr;
@@ -23,13 +29,20 @@ void UAITaskManager::Recalculate()
 		it != Tasks.end();
 		++it)
 	{
-		float Proba = (*it)->FindProba();
+		float Proba = (*it)->FindProba(ContextData);
 		if (MaxProba < Proba)
 		{
 			MaxProba = Proba;
 			Winner = (*it);
+			
+			UE_LOG(LogTemp, Log,
+				TEXT("Proba = %f, Winner Name = %s"),
+				Proba,
+				*Winner->GetName());
 		}
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("Winner Task Name = %s"), *Winner->GetName());
 
 	if (!Winner)
 		return;
@@ -64,8 +77,8 @@ void UAITaskManager::AddTask(UAIBaseTask* Task)
 void UAITaskManager::Tick(float DeltaTime)
 {
 	// TODO: expose tick frequency float (time sec)
-
-	UE_LOG(LogTemp, Log, TEXT("TaskManager tick"));
+	
+	UE_LOG(LogTemp, Log, TEXT("TaskManager tick | active task name = %s"), *ActiveTask->GetName());
 	if (!bStarted)
 		return;
 
@@ -75,6 +88,8 @@ void UAITaskManager::Tick(float DeltaTime)
 		{
 			UE_LOG(LogTemp, Log, TEXT("Task Interrupted"));
 			bWaitingForActiveTaskInterrupted = false;
+
+			// ActiveTask->Reset();
 			
 			// TODO: action (Recalculate?)
 			

@@ -36,7 +36,7 @@ public:
 	virtual void Start();
 	
 	UFUNCTION(BlueprintNativeEvent)
-	float FindProba();
+	float FindProba(UObject* ContextData);
 	
 	virtual void Tick(float DeltaTime) override;
 	virtual bool IsTickable() const override;
@@ -62,15 +62,15 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	AAIController* GetAIController();
+
+	virtual void Reset();
 	
 protected:
-	virtual void Reset();
-
 	UPROPERTY(BlueprintReadOnly)
 	TWeakObjectPtr<UAITaskManager> TaskManager;
 
 	UPROPERTY(BlueprintReadOnly)
-	bool bStarted {false};
+	bool bRunning {false};
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bCompleted {false};
