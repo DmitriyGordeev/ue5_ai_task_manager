@@ -24,8 +24,13 @@ void UAITaskManager::Recalculate()
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate()"));
 	if (Tasks.IsEmpty())
 		return;
+	
+	if (!CheckRecalculateCooldownIsReady())
+	{
+		return;
+	}
 
-	// TODO: сделать лимит частоты Recalculate()
+	LastRecalcUnixTime = FDateTime::Now().ToUnixTimestamp();
 	
 	UAIBaseTask* Winner = nullptr;
 	float MaxProbaSoFar = -1.0f;
@@ -46,24 +51,6 @@ void UAITaskManager::Recalculate()
 		else if (Proba == MaxProbaSoFar)
 		{
 			auto Pair = PriorityMatrix.Find(TTuple<int, int>(i, WinnerIndex));
-			
-			// // if no special priority set we select purely by growing index i,
-			// // or if priority of the current is greater we assign current task as Winner
-			// if (Pair && *Pair > 0)
-			// {
-			// 	UE_LOG(LogTemp, Log, TEXT("SORTING with PriorityMatrix = %i"), *Pair);
-			// 	MaxProbaSoFar = Proba;
-			// 	Winner = Tasks[i];
-			// 	WinnerIndex = i;
-			// }
-			// else
-			// {
-			// 	MaxProbaSoFar = Proba;
-			// 	Winner = Tasks[i];
-			// 	WinnerIndex = i;
-			// }
-
-
 			if (Pair && *Pair < 0)
 			{
 				UE_LOG(LogTemp, Log, TEXT("SORTING with PriorityMatrix = %i"), *Pair);
@@ -74,13 +61,6 @@ void UAITaskManager::Recalculate()
 			Winner = Tasks[i];
 			WinnerIndex = i;
 		}
-		
-		// if (Proba >= MaxProbaSoFar)
-		// {
-		// 	MaxProbaSoFar = Proba;
-		// 	Winner = Tasks[i];
-		// 	WinnerIndex = i;
-		// }
 	}
 	
 	if (!Winner)
@@ -221,4 +201,9 @@ void UAITaskManager::AddPairWisePriority(int HigherPriorityTaskIndex, int LowerP
 
 	PriorityMatrix.Add(TTuple<int, int>(HigherPriorityTaskIndex, LowerPriorityTaskIndex), 1);
 	PriorityMatrix.Add(TTuple<int, int>(LowerPriorityTaskIndex, HigherPriorityTaskIndex), -1);
+}
+
+bool UAITaskManager::CheckRecalculateCooldownIsReady() const
+{
+	return (FDateTime::Now().ToUnixTimestamp() - LastRecalcUnixTime) < 2;
 }
