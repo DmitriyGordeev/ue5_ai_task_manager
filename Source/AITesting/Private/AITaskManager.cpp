@@ -15,6 +15,7 @@ void UAITaskManager::Start()
 	Recalculate();
 }
 
+// TODO: нужно отрефакторить
 void UAITaskManager::Recalculate()
 {
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate()"));
