@@ -9,13 +9,13 @@
 // TODO: сделать общие коментарии после тестов
 
 
-void UAITaskManager::Start(UObject* ContextData)
+void UAITaskManager::Start()
 {
 	bStarted = true;
-	Recalculate(ContextData);
+	Recalculate();
 }
 
-void UAITaskManager::Recalculate(UObject* ContextData)
+void UAITaskManager::Recalculate()
 {
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate()"));
 	if (Tasks.IsEmpty())
@@ -114,7 +114,7 @@ void UAITaskManager::Tick(float DeltaTime)
 	if (ActiveTask->IsCompleted())
 	{
 		// TODO: внести ContextData внутрь 
-		// Recalculate();
+		//  Recalculate();
 		return;
 	}
 

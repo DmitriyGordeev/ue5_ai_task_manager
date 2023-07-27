@@ -27,11 +27,11 @@ public:
 	
 	/* TaskManager's entry point (equivalent of RunBehaviorTree) */
 	UFUNCTION(BlueprintCallable)
-	virtual void Start(UObject* ContextData);
+	virtual void Start();
 
 	/* Find next relevant task to execute */
 	UFUNCTION(BlueprintCallable)
-	virtual void Recalculate(UObject* ContextData);
+	virtual void Recalculate();
 	
 	/* Asks current task for interruption - it's up to Task to respond:
 	 * if task hasn't responded - it's continue running until marked Completed */
@@ -62,7 +62,7 @@ public:
 
 	// TODO: Move to protected:
 	UPROPERTY(BlueprintReadWrite)
-	UObject* ContextD;
+	UObject* ContextData;
 
 	
 protected:
