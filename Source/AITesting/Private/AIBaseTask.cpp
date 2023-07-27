@@ -38,6 +38,9 @@ void UAIBaseTask::Reset()
 float UAIBaseTask::ExtractProba(AAIController* Controller, UObject* ContextData)
 {
 	Proba = FindProba(Controller, ContextData);
+	Proba = Proba > 1.0f ? 1.0f : Proba;
+	Proba = Proba < 0.0f ? 0.0f : Proba;
+	UE_LOG(LogTemp, Log, TEXT("Clamped Proba = %f"), Proba);
 	return Proba;
 }
 

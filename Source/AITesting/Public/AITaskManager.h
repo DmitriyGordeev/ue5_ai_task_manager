@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AIBaseTask.h"
 #include "AIController.h"
+#include "Templates/Tuple.h"
 #include "AITaskManager.generated.h"
 
 
@@ -43,8 +44,12 @@ public:
 	// OnBeforeTaskChange
 	// OnAfterTaskChange
 
+	/** Adds task to TaskManager
+	 * returns index of just added task in the array of tasks,
+	 * if task null object returns -1
+	 * */
 	UFUNCTION(BlueprintCallable)
-	void AddTask(UAIBaseTask* Task);
+	UPARAM(DisplayName = "TaskIndex") int AddTask(UAIBaseTask* Task);
 	
 	// TODO: move to protected
 	UPROPERTY(BlueprintReadWrite)
@@ -60,10 +65,14 @@ public:
 	virtual UWorld* GetWorld() const override;
 
 
-	// TODO: Move to protected:
+	// TODO: Move to protected ?
 	UPROPERTY(BlueprintReadWrite)
 	UObject* ContextData;
 
+	/** Tells TaskManager that Task with TaskIndex1 should have greater priority
+	 * over TaskIndex2 in case both tasks have the same probas */
+	UFUNCTION(BlueprintCallable)
+	virtual void AddPairWisePriority(int HigherPriorityTaskIndex, int LowerPriorityTaskIndex);
 	
 protected:
 	UPROPERTY(BlueprintReadWrite)
@@ -73,4 +82,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bWaitingForActiveTaskInterrupted {false};
+
+	// TODO: пояснить
+	TMap<TTuple<int, int>, int> PriorityMatrix;
 };

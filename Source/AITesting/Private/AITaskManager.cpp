@@ -2,6 +2,9 @@
 
 #include "AIBaseTask.h"
 #include "AITaskManager.h"
+
+#include "SAdvancedTransformInputBox.h"
+#include "Engine/RendererSettings.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -27,17 +30,57 @@ void UAITaskManager::Recalculate()
 	UAIBaseTask* Winner = nullptr;
 	float MaxProbaSoFar = -1.0f;
 	float Proba = 0.0f;
+	int WinnerIndex = -1;
 	
-	// TODO: thread pool ?
+	// TODO: распараллелить ? (могут быть проблемы, если FindProba пишет в ContextData)
 	for(auto i = 0; i < Tasks.Num(); i++)
 	{
 		Proba = Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
-		if (Proba >= MaxProbaSoFar)
+
+		if (Proba > MaxProbaSoFar)
 		{
 			MaxProbaSoFar = Proba;
 			Winner = Tasks[i];
-			// WinnerIndex = i;
+			WinnerIndex = i;
 		}
+		else if (Proba == MaxProbaSoFar)
+		{
+			auto Pair = PriorityMatrix.Find(TTuple<int, int>(i, WinnerIndex));
+			
+			// // if no special priority set we select purely by growing index i,
+			// // or if priority of the current is greater we assign current task as Winner
+			// if (Pair && *Pair > 0)
+			// {
+			// 	UE_LOG(LogTemp, Log, TEXT("SORTING with PriorityMatrix = %i"), *Pair);
+			// 	MaxProbaSoFar = Proba;
+			// 	Winner = Tasks[i];
+			// 	WinnerIndex = i;
+			// }
+			// else
+			// {
+			// 	MaxProbaSoFar = Proba;
+			// 	Winner = Tasks[i];
+			// 	WinnerIndex = i;
+			// }
+
+
+			if (Pair && *Pair < 0)
+			{
+				UE_LOG(LogTemp, Log, TEXT("SORTING with PriorityMatrix = %i"), *Pair);
+				continue;
+			}
+
+			MaxProbaSoFar = Proba;
+			Winner = Tasks[i];
+			WinnerIndex = i;
+		}
+		
+		// if (Proba >= MaxProbaSoFar)
+		// {
+		// 	MaxProbaSoFar = Proba;
+		// 	Winner = Tasks[i];
+		// 	WinnerIndex = i;
+		// }
 	}
 	
 	if (!Winner)
@@ -85,13 +128,14 @@ bool UAITaskManager::TryInterruptActiveTask()
 	return ActiveTask->IsInterrupted();
 }
 
-void UAITaskManager::AddTask(UAIBaseTask* Task)
+int UAITaskManager::AddTask(UAIBaseTask* Task)
 {
-	if (!Task)
-		return;
+	if (!Task)	// TODO: добавить Task->IsValidLowLevel() ?
+		return -1;
 	Task->SetTaskManager(this);
 	Tasks.Add(Task);
 	UE_LOG(LogTemp, Log, TEXT("Task was added"));
+	return Tasks.Num() - 1;
 }
 
 
@@ -104,18 +148,6 @@ void UAITaskManager::Tick(float DeltaTime)
 
 	if (ActiveTask)
 		UE_LOG(LogTemp, Log, TEXT("TaskManager tick | active task name = %s"), *ActiveTask->GetName());
-
-	// if (ActiveTask && bWaitingForActiveTaskInterrupted)
-	// {
-	// 	if (ActiveTask->IsCompleted() || ActiveTask->IsInterrupted())
-	// 	{
-	// 		UE_LOG(LogTemp, Log, TEXT("Task Interrupted"));
-	// 		bWaitingForActiveTaskInterrupted = false;
-	// 		
-	// 		// TODO: action (Recalculate?)
-	// 		
-	// 	}
-	// }
 
 	if (!ActiveTask)
 		return;
@@ -174,4 +206,19 @@ UWorld* UAITaskManager::GetWorld() const
 	}
 	// Else return null - the latent action will fail to initialize
 	return nullptr;
+}
+
+void UAITaskManager::AddPairWisePriority(int HigherPriorityTaskIndex, int LowerPriorityTaskIndex)
+{
+	if (HigherPriorityTaskIndex >= Tasks.Num() || LowerPriorityTaskIndex >= Tasks.Num())
+		return;
+
+	if (HigherPriorityTaskIndex < 0 || LowerPriorityTaskIndex < 0)
+		return;
+
+	if (HigherPriorityTaskIndex == LowerPriorityTaskIndex)
+		return;
+
+	PriorityMatrix.Add(TTuple<int, int>(HigherPriorityTaskIndex, LowerPriorityTaskIndex), 1);
+	PriorityMatrix.Add(TTuple<int, int>(LowerPriorityTaskIndex, HigherPriorityTaskIndex), -1);
 }
