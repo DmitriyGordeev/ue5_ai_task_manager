@@ -69,6 +69,13 @@ public:
 	AAIController* GetAIController();
 
 	virtual void Reset();
+
+	/** Should we stop and restart this task if
+	 * we did recalculation and this task is still the most relevant among all?
+	 * If 'false' - task will continue running without stops until MarkComplete or MarkInterrupted
+	 * */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool bShouldRestartIfWinnerAgain {true};
 	
 protected:
 	UPROPERTY(BlueprintReadOnly)

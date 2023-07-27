@@ -21,13 +21,12 @@ void UAITaskManager::Recalculate()
 	if (Tasks.IsEmpty())
 		return;
 
-	if (ActiveTask)
-		ActiveTask->Reset();
-
+	// TODO: сделать лимит частоты Recalculate()
+	
 	UAIBaseTask* Winner = nullptr;
 	float MaxProbaSoFar = -1.0f;
 	float Proba = 0.0f;
-
+	
 	// TODO: thread pool ?
 	for(auto i = 0; i < Tasks.Num(); i++)
 	{
@@ -39,7 +38,7 @@ void UAITaskManager::Recalculate()
 			// WinnerIndex = i;
 		}
 	}
-
+	
 	if (!Winner)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Winner is null"));
@@ -51,7 +50,21 @@ void UAITaskManager::Recalculate()
 		UE_LOG(LogTemp, Log, TEXT("Winner->GetProba = 0.0f"));
 		return;
 	}
-
+	
+	if (ActiveTask && Winner == ActiveTask)
+	{
+		if (ActiveTask->bShouldRestartIfWinnerAgain)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Restaring the same Task because it's a winner again"));
+			ActiveTask->Reset();
+			ActiveTask->Start();
+		}
+		return;
+	}
+	
+	if (ActiveTask)
+		ActiveTask->Reset();
+	
 	UE_LOG(LogTemp, Log, TEXT("Winner Task Name = %s"), *Winner->GetName());
 	
 	ActiveTask = Winner;
