@@ -74,7 +74,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void AddPairWisePriority(int HigherPriorityTaskIndex, int LowerPriorityTaskIndex);
 	
-	bool CheckRecalculateCooldownIsReady() const;
+	bool CheckRecalculateCooldownIsReady();
 
 protected:
 	UPROPERTY(BlueprintReadWrite)
@@ -87,6 +87,6 @@ protected:
 
 	// TODO: пояснить
 	TMap<TTuple<int, int>, int> PriorityMatrix;
-
+	
 	int64 LastRecalcUnixTime {0};
 };

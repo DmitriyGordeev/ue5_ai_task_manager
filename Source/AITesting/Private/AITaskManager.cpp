@@ -30,6 +30,8 @@ void UAITaskManager::Recalculate()
 		return;
 	}
 
+	UE_LOG(LogTemp, Log, TEXT("LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
+
 	LastRecalcUnixTime = FDateTime::Now().ToUnixTimestamp();
 	
 	UAIBaseTask* Winner = nullptr;
@@ -203,7 +205,13 @@ void UAITaskManager::AddPairWisePriority(int HigherPriorityTaskIndex, int LowerP
 	PriorityMatrix.Add(TTuple<int, int>(LowerPriorityTaskIndex, HigherPriorityTaskIndex), -1);
 }
 
-bool UAITaskManager::CheckRecalculateCooldownIsReady() const
+bool UAITaskManager::CheckRecalculateCooldownIsReady()
 {
-	return (FDateTime::Now().ToUnixTimestamp() - LastRecalcUnixTime) < 2;
+	// TODO: перевести в милисекунды ? и добавить параметр частоты
+	if (LastRecalcUnixTime == 0)
+	{
+		LastRecalcUnixTime = FDateTime::Now().ToUnixTimestamp();
+		return true;
+	}
+	return (FDateTime::Now().ToUnixTimestamp() - LastRecalcUnixTime) > 1;
 }
