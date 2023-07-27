@@ -17,7 +17,8 @@ void UAIBaseTask::Start()
 
 float UAIBaseTask::FindProba_Implementation(AAIController* Controller, UObject* ContextData)
 {
-	return 1.0;
+	Proba = 1.0f;
+	return Proba;
 }
 
 // float UAIBaseTask::FindProba_Implementation(AAIController* Controller, UObject* ContextData)
@@ -31,6 +32,13 @@ void UAIBaseTask::Reset()
 	bRunning = false;
 	bCompleted = false;
 	bInterrupted = false;
+	UE_LOG(LogTemp, Log, TEXT("Reset() task %s"), *GetName());
+}
+
+float UAIBaseTask::ExtractProba(AAIController* Controller, UObject* ContextData)
+{
+	Proba = FindProba(Controller, ContextData);
+	return Proba;
 }
 
 void UAIBaseTask::Tick(float DeltaTime)
@@ -122,7 +130,7 @@ bool UAIBaseTask::IsInterrupted() const
 
 float UAIBaseTask::GetProba() const
 {
-	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask::FindProba()"));
+	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask::GetProba() = %f"), Proba);
 	return Proba;
 }
 

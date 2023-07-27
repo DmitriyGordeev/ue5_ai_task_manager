@@ -26,29 +26,12 @@ void UAITaskManager::Recalculate()
 
 	UAIBaseTask* Winner = nullptr;
 	float MaxProbaSoFar = -1.0f;
-	// int WinnerIndex = -1;
-	
-	// for(auto it = Tasks.begin();
-	// 	it != Tasks.end();
-	// 	++it)
-	// {
-	// 	float Proba = (*it)->FindProba(AIOwner.Get(), ContextData);
-	// 	if (MaxProba < Proba)
-	// 	{
-	// 		MaxProba = Proba;
-	// 		Winner = (*it);
-	// 		
-	// 		UE_LOG(LogTemp, Log,
-	// 			TEXT("Proba = %f, Winner Name = %s"),
-	// 			Proba,
-	// 			*Winner->GetName());
-	// 	}
-	// }
-
 	float Proba = 0.0f;
+
+	// TODO: thread pool ?
 	for(auto i = 0; i < Tasks.Num(); i++)
 	{
-		Proba = Tasks[i]->FindProba(AIOwner.Get(), ContextData);
+		Proba = Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
 		if (Proba >= MaxProbaSoFar)
 		{
 			MaxProbaSoFar = Proba;
@@ -57,9 +40,19 @@ void UAITaskManager::Recalculate()
 		}
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Winner Task Name = %s"), *Winner->GetName());
 	if (!Winner)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Winner is null"));
 		return;
+	}
+	
+	if (Winner->GetProba() <= 0.0f)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Winner->GetProba = 0.0f"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Winner Task Name = %s"), *Winner->GetName());
 	
 	ActiveTask = Winner;
 	Winner->Start();
@@ -92,9 +85,11 @@ void UAITaskManager::Tick(float DeltaTime)
 {
 	// TODO: expose tick frequency float (time sec)
 	
-	UE_LOG(LogTemp, Log, TEXT("TaskManager tick | active task name = %s"), *ActiveTask->GetName());
 	if (!bStarted)
 		return;
+
+	if (ActiveTask)
+		UE_LOG(LogTemp, Log, TEXT("TaskManager tick | active task name = %s"), *ActiveTask->GetName());
 
 	// if (ActiveTask && bWaitingForActiveTaskInterrupted)
 	// {
@@ -113,8 +108,7 @@ void UAITaskManager::Tick(float DeltaTime)
 
 	if (ActiveTask->IsCompleted())
 	{
-		// TODO: внести ContextData внутрь 
-		//  Recalculate();
+		Recalculate();
 		return;
 	}
 
