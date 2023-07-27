@@ -36,7 +36,7 @@ public:
 	virtual void Start();
 	
 	UFUNCTION(BlueprintNativeEvent)
-	float FindProba(UObject* ContextData);
+	float FindProba(AAIController* Controller, UObject* ContextData);
 	
 	virtual void Tick(float DeltaTime) override;
 	virtual bool IsTickable() const override;

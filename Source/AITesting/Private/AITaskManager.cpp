@@ -3,6 +3,7 @@
 #include "AIBaseTask.h"
 #include "AITaskManager.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 // TODO: сделать общие коментарии после тестов
@@ -23,27 +24,40 @@ void UAITaskManager::Recalculate(UObject* ContextData)
 	if (ActiveTask)
 		ActiveTask->Reset();
 
-	float MaxProba = 0.0f;
 	UAIBaseTask* Winner = nullptr;
-	for(auto it = Tasks.begin();
-		it != Tasks.end();
-		++it)
+	float MaxProbaSoFar = -1.0f;
+	// int WinnerIndex = -1;
+	
+	// for(auto it = Tasks.begin();
+	// 	it != Tasks.end();
+	// 	++it)
+	// {
+	// 	float Proba = (*it)->FindProba(AIOwner.Get(), ContextData);
+	// 	if (MaxProba < Proba)
+	// 	{
+	// 		MaxProba = Proba;
+	// 		Winner = (*it);
+	// 		
+	// 		UE_LOG(LogTemp, Log,
+	// 			TEXT("Proba = %f, Winner Name = %s"),
+	// 			Proba,
+	// 			*Winner->GetName());
+	// 	}
+	// }
+
+	float Proba = 0.0f;
+	for(auto i = 0; i < Tasks.Num(); i++)
 	{
-		float Proba = (*it)->FindProba(ContextData);
-		if (MaxProba < Proba)
+		Proba = Tasks[i]->FindProba(AIOwner.Get(), ContextData);
+		if (Proba >= MaxProbaSoFar)
 		{
-			MaxProba = Proba;
-			Winner = (*it);
-			
-			UE_LOG(LogTemp, Log,
-				TEXT("Proba = %f, Winner Name = %s"),
-				Proba,
-				*Winner->GetName());
+			MaxProbaSoFar = Proba;
+			Winner = Tasks[i];
+			// WinnerIndex = i;
 		}
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Winner Task Name = %s"), *Winner->GetName());
-
 	if (!Winner)
 		return;
 	
@@ -82,19 +96,38 @@ void UAITaskManager::Tick(float DeltaTime)
 	if (!bStarted)
 		return;
 
-	if (ActiveTask && bWaitingForActiveTaskInterrupted)
+	// if (ActiveTask && bWaitingForActiveTaskInterrupted)
+	// {
+	// 	if (ActiveTask->IsCompleted() || ActiveTask->IsInterrupted())
+	// 	{
+	// 		UE_LOG(LogTemp, Log, TEXT("Task Interrupted"));
+	// 		bWaitingForActiveTaskInterrupted = false;
+	// 		
+	// 		// TODO: action (Recalculate?)
+	// 		
+	// 	}
+	// }
+
+	if (!ActiveTask)
+		return;
+
+	if (ActiveTask->IsCompleted())
+	{
+		// TODO: внести ContextData внутрь 
+		// Recalculate();
+		return;
+	}
+
+	if (bWaitingForActiveTaskInterrupted)
 	{
 		if (ActiveTask->IsCompleted() || ActiveTask->IsInterrupted())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Task Interrupted"));
 			bWaitingForActiveTaskInterrupted = false;
-
-			// ActiveTask->Reset();
-			
-			// TODO: action (Recalculate?)
-			
+			Recalculate();
 		}
 	}
+	
 }
 
 bool UAITaskManager::IsTickable() const

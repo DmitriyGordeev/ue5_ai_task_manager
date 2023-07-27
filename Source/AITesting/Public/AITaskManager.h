@@ -59,6 +59,11 @@ public:
 	virtual TStatId GetStatId() const override;
 	virtual UWorld* GetWorld() const override;
 
+
+	// TODO: Move to protected:
+	UPROPERTY(BlueprintReadWrite)
+	UObject* ContextD;
+
 	
 protected:
 	UPROPERTY(BlueprintReadWrite)

@@ -15,11 +15,16 @@ void UAIBaseTask::Start()
 	OnExecute(GetAIController());
 }
 
-float UAIBaseTask::FindProba_Implementation(UObject* ContextData)
+float UAIBaseTask::FindProba_Implementation(AAIController* Controller, UObject* ContextData)
 {
-	Proba = 1.0f;
-	return Proba;
+	return 1.0;
 }
+
+// float UAIBaseTask::FindProba_Implementation(AAIController* Controller, UObject* ContextData)
+// {
+// 	Proba = 1.0f;
+// 	return Proba;
+// }
 
 void UAIBaseTask::Reset()
 {
@@ -37,7 +42,6 @@ void UAIBaseTask::Tick(float DeltaTime)
 
 bool UAIBaseTask::IsTickable() const
 {
-	// TODO: ошибка в том, что bStarted у AIMove равна True
 	bool TickableCheck = !IsTemplate(RF_ClassDefaultObject) && bRunning && !bCompleted && !bInterrupted;
 	// UE_LOG(LogTemp, Log, TEXT("%s !CDO = %i"), *GetName(), !IsTemplate(RF_ClassDefaultObject));
 	// UE_LOG(LogTemp, Log, TEXT("%s bRunning = %i"), *GetName(), bRunning);
