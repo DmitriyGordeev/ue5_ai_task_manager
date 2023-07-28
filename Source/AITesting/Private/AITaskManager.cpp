@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "AIBaseTask.h"
 #include "AITaskManager.h"
+#include "AIBaseTask.h"
+
 
 #include "SAdvancedTransformInputBox.h"
 #include "Engine/RendererSettings.h"

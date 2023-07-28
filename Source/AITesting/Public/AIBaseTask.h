@@ -38,8 +38,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	float FindProba(AAIController* Controller, UObject* ContextData);
 
-	// Simple wrapper-setter around blueprint-implementable FindProba()
-	// this function forces to set Proba field after calculation, which BP user can forget to do
+	/** Simple wrapper-setter around blueprint-implementable FindProba()
+	 * this function forces to set Proba field after calculation, which BP user can forget to do */
 	UFUNCTION()
 	float ExtractProba(AAIController* Controller, UObject* ContextData);
 	
