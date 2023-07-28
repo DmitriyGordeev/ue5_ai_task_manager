@@ -60,9 +60,14 @@ void UAITaskManager::Recalculate()
 				continue;
 			}
 
-			MaxProbaSoFar = Proba;
-			Winner = Tasks[i];
-			WinnerIndex = i;
+			// Randomly choose between two tasks if they have equal probabilities
+			if (FMath::FRand() > 0.5f)
+			{
+				UE_LOG(LogTemp, Log, TEXT("Randomly choosing new task"));
+				MaxProbaSoFar = Proba;
+				Winner = Tasks[i];
+				WinnerIndex = i;
+			}
 		}
 	}
 	
