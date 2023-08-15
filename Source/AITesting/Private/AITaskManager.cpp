@@ -2,6 +2,7 @@
 
 #include "AITaskManager.h"
 #include "AIBaseTask.h"
+#include "MyRunnable.h"
 
 
 #include "SAdvancedTransformInputBox.h"
