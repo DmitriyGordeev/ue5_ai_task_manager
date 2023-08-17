@@ -20,6 +20,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// Runnable object holding some function inside to run
 	TSharedPtr<MyRunnable> RunnableObject;
 
 public:	
