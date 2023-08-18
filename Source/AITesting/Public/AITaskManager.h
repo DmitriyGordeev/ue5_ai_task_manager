@@ -80,7 +80,7 @@ public:
 	
 	bool CheckRecalculateCooldownIsReady();
 
-	bool FindReactionInQueue(UAIBaseTask* FromTask, int32 EnumIndex) const;
+	bool FindReaction(UAIBaseTask* FromTask, int32 EnumIndex);
 
 
 protected:

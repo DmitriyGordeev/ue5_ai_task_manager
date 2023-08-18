@@ -36,10 +36,7 @@ void UAITaskManager::Recalculate()
 	UE_LOG(LogTemp, Log, TEXT("LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
 
 	LastRecalcUnixTime = FDateTime::Now().ToUnixTimestamp();
-	
-	UAIBaseTask* Winner = nullptr;		// todo: сделать первой - тогда луп нужно начинать с 1
-	// float MaxProbaSoFar = -1.0f;
-	// float Proba = 0.0f;
+	UAIBaseTask* Winner = nullptr;
 	int WinnerIndex = -1;
 	
 	for(auto i = 0; i < Tasks.Num(); i++)
@@ -48,12 +45,11 @@ void UAITaskManager::Recalculate()
 		if (Tasks[i]->ShouldBeIgnored(AIOwner.Get(), ContextData))
 			continue;
 		
-		const float Proba = Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
+		Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
 		if (!Winner)
 		{
 			Winner = Tasks[i];
 			WinnerIndex = i;
-			// MaxProbaSoFar = Proba;
 			continue;
 		}
 
@@ -66,7 +62,6 @@ void UAITaskManager::Recalculate()
 				TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
 				Winner = Tuple.Key;
 				WinnerIndex = Tuple.Value;
-				// MaxProbaSoFar = Winner->GetProba();
 				continue;
 			}
 			
@@ -74,7 +69,6 @@ void UAITaskManager::Recalculate()
 			// current task Tasks[i] should have more priority
 			Winner = Tasks[i];
 			WinnerIndex = i;
-			// MaxProbaSoFar = Winner->GetProba();
 			continue;
 		}
 
@@ -82,42 +76,24 @@ void UAITaskManager::Recalculate()
 		// but winner has, Winner has more priority
 		if (Winner->GetConsumedReaction())
 			continue;
-
-
+		
 		// If both haven't consumed any reaction - compare them as equal
 		TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
 		Winner = Tuple.Key;
 		WinnerIndex = Tuple.Value;
-		// MaxProbaSoFar = Winner->GetProba();
-
-		
-		// if (Proba > MaxProbaSoFar)
-		// {
-		// 	MaxProbaSoFar = Proba;
-		// 	Winner = Tasks[i];
-		// 	WinnerIndex = i;
-		// }
-		// else if (Proba == MaxProbaSoFar)
-		// {
-		// 	auto Pair = PriorityMatrix.Find(TTuple<int, int>(i, WinnerIndex));
-		// 	if (Pair && *Pair < 0)
-		// 	{
-		// 		UE_LOG(LogTemp, Log, TEXT("SORTING with PriorityMatrix = %i"), *Pair);
-		// 		continue;
-		// 	}
-		//
-		// 	// Randomly choose between two tasks if they have equal probabilities
-		// 	if (FMath::FRand() > 0.5f)
-		// 	{
-		// 		UE_LOG(LogTemp, Log, TEXT("Randomly choosing new task"));
-		// 		MaxProbaSoFar = Proba;
-		// 		Winner = Tasks[i];
-		// 		WinnerIndex = i;
-		// 	}
-		// }
 	}
 
-	// TODO: убрать ConsumedReaction для всех тасков
+	
+	// Cleanup all reaction from Reactions map which were marked Consumed
+	for(const auto& t : Reactions)
+	{
+		if (t.Value)
+			Reactions.Remove(t.Key);
+	}
+	
+
+
+	
 	
 	if (!Winner)
 	{
@@ -177,12 +153,6 @@ int UAITaskManager::AddTask(UAIBaseTask* Task)
 
 void UAITaskManager::ConsumeReaction(int32 ReactionType)
 {
-	// 1. Добавить реакцию в очередь
-
-	// 2. вызвать recalculate
-
-	// 3. убрать из queue те реакции у которых Consumed=true;
-
 	Reactions[ReactionType] = false;
 
 	// todo: подумать про блок по времени
@@ -284,12 +254,13 @@ bool UAITaskManager::CheckRecalculateCooldownIsReady()
 	return (FDateTime::Now().ToUnixTimestamp() - LastRecalcUnixTime) > 1;
 }
 
-bool UAITaskManager::FindReactionInQueue(UAIBaseTask* FromTask, int32 ReactionType) const
+bool UAITaskManager::FindReaction(UAIBaseTask* FromTask, int32 ReactionType)
 {
 	if (Reactions.Contains(ReactionType))
 	{
 		if (FromTask)
 			FromTask->SetConsumedReaction(true);
+		Reactions[ReactionType] = true;
 		return true;
 	}
 	return false;
@@ -304,26 +275,42 @@ TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBa
 	float Proba2 = T2->GetProba();
 
 	if (Proba1 > Proba2)
+	{
+		T2->SetConsumedReaction(false);
 		return {T1, Index1};
-
+	}
+	
 	if (Proba1 == Proba2)
 	{
 		auto Pair = PriorityMatrix.Find(TTuple<int, int>(Index1, Index2));
 		if (Pair && *Pair < 0)
 		{
 			if (*Pair < 0)
+			{
+				T1->SetConsumedReaction(false);
 				return {T2, Index2};
+			}
+				
 			if (*Pair > 0)
+			{
+				T2->SetConsumedReaction(false);
 				return {T1, Index1};
+			}
+				
 		}
 
 		if (FMath::FRand() > 0.5f)
 		{
+			T2->SetConsumedReaction(false);
 			return {T1, Index1};
 		}
 		else
+		{
+			T1->SetConsumedReaction(false);
 			return {T2, Index2};
+		}
 	}
 
+	T1->SetConsumedReaction(false);
 	return {T2, Index2};
 }
