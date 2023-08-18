@@ -78,10 +78,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void AddPairWisePriority(int HigherPriorityTaskIndex, int LowerPriorityTaskIndex);
 	
+	UFUNCTION(BlueprintCallable)
+	bool FindReaction(int32 EnumIndex) const { return Reactions.Contains(EnumIndex); }
+
+	UFUNCTION(BlueprintCallable)
+	bool ActivateReaction(UAIBaseTask* FromTask, int32 EnumIndex);
+
 	bool CheckRecalculateCooldownIsReady();
-
-	bool FindReaction(UAIBaseTask* FromTask, int32 EnumIndex);
-
 
 protected:
 	TTuple<UAIBaseTask*, int> CompareTwoTasks(UAIBaseTask* T1, UAIBaseTask* T2, int Index1, int Index2);

@@ -153,7 +153,9 @@ int UAITaskManager::AddTask(UAIBaseTask* Task)
 
 void UAITaskManager::ConsumeReaction(int32 ReactionType)
 {
-	Reactions[ReactionType] = false;
+	UE_LOG(LogTemp, Log, TEXT("Consuming reaction type = %i"), ReactionType);
+
+	Reactions.Add(ReactionType, false);
 
 	// todo: подумать про блок по времени
 	Recalculate();
@@ -254,7 +256,9 @@ bool UAITaskManager::CheckRecalculateCooldownIsReady()
 	return (FDateTime::Now().ToUnixTimestamp() - LastRecalcUnixTime) > 1;
 }
 
-bool UAITaskManager::FindReaction(UAIBaseTask* FromTask, int32 ReactionType)
+
+
+bool UAITaskManager::ActivateReaction(UAIBaseTask* FromTask, int32 ReactionType)
 {
 	if (Reactions.Contains(ReactionType))
 	{
