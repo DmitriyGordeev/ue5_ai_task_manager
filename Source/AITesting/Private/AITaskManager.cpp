@@ -33,9 +33,10 @@ void UAITaskManager::Recalculate()
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
-
-	LastRecalcUnixTime = FDateTime::Now().ToUnixTimestamp();
+	UE_LOG(LogTemp, Log, TEXT("[Before update] LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
+	LastRecalcUnixTime = GetCurrentMilliseconds();
+	UE_LOG(LogTemp, Log, TEXT("[After update] LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
+	
 	UAIBaseTask* Winner = nullptr;
 	int WinnerIndex = -1;
 	
@@ -43,7 +44,11 @@ void UAITaskManager::Recalculate()
 	{
 		// early stop for comparing the task with others if specified explicitly (in BP)
 		if (Tasks[i]->ShouldBeIgnored(AIOwner.Get(), ContextData))
+		{
+			UE_LOG(LogTemp, Log, TEXT("Task %s ShouldBeIgnored = true"), *Tasks[i]->GetName());
 			continue;
+		}
+			
 		
 		Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
 		if (!Winner)
@@ -85,14 +90,17 @@ void UAITaskManager::Recalculate()
 
 	
 	// Cleanup all reaction from Reactions map which were marked Consumed
+	const int64 TimeNow = GetCurrentMilliseconds();
 	for(const auto& t : Reactions)
 	{
-		if (t.Value)
+		// remove reaction if it was Consumed by whatever task,
+		// or if it's expired
+		if (t.Value.Consumed || TimeNow >= t.Value.LifeTimeMs + t.Value.StartTime)
+		{
 			Reactions.Remove(t.Key);
+			UE_LOG(LogTemp, Log, TEXT("EReaction %i was removed"), t.Key);
+		}
 	}
-	
-
-
 	
 	
 	if (!Winner)
@@ -103,7 +111,7 @@ void UAITaskManager::Recalculate()
 	
 	if (Winner->GetProba() <= 0.0f)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Winner->GetProba = 0.0f"));
+		UE_LOG(LogTemp, Log, TEXT("Winner(%s)->GetProba = 0.0f"), *Winner->GetName());
 		return;
 	}
 	
@@ -151,11 +159,18 @@ int UAITaskManager::AddTask(UAIBaseTask* Task)
 }
 
 
-void UAITaskManager::ConsumeReaction(int32 ReactionType)
-{
-	UE_LOG(LogTemp, Log, TEXT("Consuming reaction type = %i"), ReactionType);
+void UAITaskManager::ConsumeReaction(int32 ReactionType, int64 LifeTimeMs)
+{	
+	
+	LifeTimeMs = LifeTimeMs < 0 ? 0 : LifeTimeMs;
+	
+	Reactions.Add(ReactionType, {
+		ReactionType,
+		false,
+		GetCurrentMilliseconds(),
+		LifeTimeMs});
 
-	Reactions.Add(ReactionType, false);
+	UE_LOG(LogTemp, Log, TEXT("Consuming reaction type = %i, StartTime = %lld"), ReactionType, GetCurrentMilliseconds());
 
 	// todo: подумать про блок по времени
 	Recalculate();
@@ -247,16 +262,13 @@ void UAITaskManager::AddPairWisePriority(int HigherPriorityTaskIndex, int LowerP
 
 bool UAITaskManager::CheckRecalculateCooldownIsReady()
 {
-	// TODO: перевести в милисекунды ? и добавить параметр частоты
 	if (LastRecalcUnixTime == 0)
 	{
-		LastRecalcUnixTime = FDateTime::Now().ToUnixTimestamp();
+		LastRecalcUnixTime = GetCurrentMilliseconds();
 		return true;
 	}
-	return (FDateTime::Now().ToUnixTimestamp() - LastRecalcUnixTime) > 1;
+	return (GetCurrentMilliseconds() - LastRecalcUnixTime) > 0;
 }
-
-
 
 bool UAITaskManager::ActivateReaction(UAIBaseTask* FromTask, int32 ReactionType)
 {
@@ -264,7 +276,7 @@ bool UAITaskManager::ActivateReaction(UAIBaseTask* FromTask, int32 ReactionType)
 	{
 		if (FromTask)
 			FromTask->SetConsumedReaction(true);
-		Reactions[ReactionType] = true;
+		Reactions[ReactionType].Consumed = true;
 		return true;
 	}
 	return false;
@@ -317,4 +329,12 @@ TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBa
 
 	T1->SetConsumedReaction(false);
 	return {T2, Index2};
+}
+
+int64 UAITaskManager::GetCurrentMilliseconds()
+{
+	const auto CurrentTime = FDateTime::Now();
+	return CurrentTime.GetMillisecond() +
+			CurrentTime.GetSecond() * 1000 +
+			CurrentTime.GetMinute() * 60 * 1000;
 }

@@ -41,13 +41,6 @@ void UAIBaseTask::SetConsumedReaction(bool Consumed)
 
 float UAIBaseTask::ExtractProba(AAIController* Controller, UObject* ContextData)
 {
-	// if (ShouldBeIgnored(Controller, ContextData))
-	// {
-	// 	UE_LOG(LogTemp, Log, TEXT("Task %s was ignored"), *GetName());
-	// 	Proba = 0.0f;
-	// 	return Proba;
-	// }
-	
 	Proba = FindProba(Controller, ContextData);
 	Proba = Proba > 1.0f ? 1.0f : Proba;
 	Proba = Proba < 0.0f ? 0.0f : Proba;

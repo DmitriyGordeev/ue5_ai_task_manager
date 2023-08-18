@@ -58,7 +58,7 @@ public:
 	UAIBaseTask* ActiveTask;
 
 	UFUNCTION(BlueprintCallable)
-	void ConsumeReaction(int32 ReactionType);
+	void ConsumeReaction(int32 ReactionType, int64 LifeTimeMs = 0);
 
 	// -------- FTickableGameObject functions --------------
 	virtual void Tick(float DeltaTime) override;
@@ -86,8 +86,11 @@ public:
 
 	bool CheckRecalculateCooldownIsReady();
 
+	static int64 GetCurrentMilliseconds();
+
 protected:
 	TTuple<UAIBaseTask*, int> CompareTwoTasks(UAIBaseTask* T1, UAIBaseTask* T2, int Index1, int Index2);
+
 	
 protected:
 	UPROPERTY(BlueprintReadWrite)
@@ -102,7 +105,8 @@ protected:
 	TMap<TTuple<int, int>, int> PriorityMatrix;
 	
 	// TDeque<TTuple<int32, bool>> ReactionQueue;
-	TMap<int32, bool> Reactions;
+	// TMap<int32, TTuple<bool, int64>> Reactions;
+	TMap<int32, AIReaction> Reactions;
 	
 	int64 LastRecalcUnixTime {0};
 };

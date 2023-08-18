@@ -1,26 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿#pragma once
 
-#pragma once
-
-#include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
-#include "AIReaction.generated.h"
-
-
-/**
- * 
- */
-UCLASS(Blueprintable)
-class AITESTING_API UAIReaction : public UObject
+struct AIReaction
 {
-	GENERATED_BODY()
-public:
-
-	UPROPERTY(EditDefaultsOnly)
-	UEnum* ReactionType {nullptr};
-
-	UPROPERTY(BlueprintReadWrite)
+	int32 ReactionEnumType {0};
 	bool Consumed {false};
+	int64_t StartTime {0};
+	int64_t LifeTimeMs {0};
 };
-
-
