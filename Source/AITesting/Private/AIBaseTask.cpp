@@ -47,6 +47,12 @@ float UAIBaseTask::ExtractProba(AAIController* Controller, UObject* ContextData)
 	return Proba;
 }
 
+void UAIBaseTask::AskInterrupt(AAIController* Controller)
+{
+	bAskedForInterruption = true;
+	OnInterruptedResponse(Controller);
+}
+
 void UAIBaseTask::Tick(float DeltaTime)
 {
 	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask Tick"));

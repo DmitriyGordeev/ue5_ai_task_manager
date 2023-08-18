@@ -80,9 +80,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	bool FindReaction(int32 EnumIndex) const { return Reactions.Contains(EnumIndex); }
-
+	
 	UFUNCTION(BlueprintCallable)
-	bool ActivateReaction(UAIBaseTask* FromTask, int32 EnumIndex);
+	bool TryActivateReaction(UAIBaseTask* FromTask, int32 EnumIndex);
 
 	bool CheckRecalculateCooldownIsReady();
 
@@ -104,8 +104,6 @@ protected:
 	// pair-wise priority for each task
 	TMap<TTuple<int, int>, int> PriorityMatrix;
 	
-	// TDeque<TTuple<int32, bool>> ReactionQueue;
-	// TMap<int32, TTuple<bool, int64>> Reactions;
 	TMap<int32, AIReaction> Reactions;
 	
 	int64 LastRecalcUnixTime {0};

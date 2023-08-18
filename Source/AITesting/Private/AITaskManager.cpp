@@ -39,6 +39,12 @@ void UAITaskManager::Recalculate()
 	
 	UAIBaseTask* Winner = nullptr;
 	int WinnerIndex = -1;
+
+
+	// TODO: может ли быть так, что задача имеет вероятность Proba = 0.0,
+	//	но флаг GetConsumedReaction = true, а все остальные задачи имеют этот флаг false,
+	//	но proba не ноль
+	
 	
 	for(auto i = 0; i < Tasks.Num(); i++)
 	{
@@ -48,9 +54,10 @@ void UAITaskManager::Recalculate()
 			UE_LOG(LogTemp, Log, TEXT("Task %s ShouldBeIgnored = true"), *Tasks[i]->GetName());
 			continue;
 		}
-			
 		
 		Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
+		UE_LOG(LogTemp, Log, TEXT("Task %s -> ExtractProba = %f"), *Tasks[i]->GetName(), Tasks[i]->GetProba());
+		
 		if (!Winner)
 		{
 			Winner = Tasks[i];
@@ -58,23 +65,33 @@ void UAITaskManager::Recalculate()
 			continue;
 		}
 
+		UE_LOG(LogTemp, Log,
+			TEXT("Task %s : GetConsumedReaction() = %i"),
+			*Tasks[i]->GetName(),
+			Tasks[i]->GetConsumedReaction()
+			);
+
 		if (Tasks[i]->GetConsumedReaction())
 		{
+			// if both winner and current task have consumed some reaction, we need
+			// to treat them as equal
 			if (Winner->GetConsumedReaction())
 			{
-				// if both winner and current task have consumed some reaction, we need
-				// to treat them as equal
 				TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
 				Winner = Tuple.Key;
 				WinnerIndex = Tuple.Value;
 				continue;
 			}
-			
+
 			// if Winner hasn't consumed any reaction,
 			// current task Tasks[i] should have more priority
-			Winner = Tasks[i];
-			WinnerIndex = i;
-			continue;
+			// (except only if Tasks[i] itself has Proba = 0)
+			if (Tasks[i]->GetProba() > 0.0f)
+			{
+				Winner = Tasks[i];
+				WinnerIndex = i;
+				continue;
+			}
 		}
 
 		// If current task Tasks[i] hasn't consumed any reaction,
@@ -270,7 +287,7 @@ bool UAITaskManager::CheckRecalculateCooldownIsReady()
 	return (GetCurrentMilliseconds() - LastRecalcUnixTime) > 0;
 }
 
-bool UAITaskManager::ActivateReaction(UAIBaseTask* FromTask, int32 ReactionType)
+bool UAITaskManager::TryActivateReaction(UAIBaseTask* FromTask, int32 ReactionType)
 {
 	if (Reactions.Contains(ReactionType))
 	{
@@ -315,7 +332,9 @@ TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBa
 				
 		}
 
-		if (FMath::FRand() > 0.5f)
+		auto p = FMath::FRand();
+		UE_LOG(LogTemp, Log, TEXT("Selecting random task of two, p = %f"), p);
+		if (p > 0.5f)
 		{
 			T2->SetConsumedReaction(false);
 			return {T1, Index1};

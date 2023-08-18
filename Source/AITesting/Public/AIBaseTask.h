@@ -47,6 +47,9 @@ public:
 	UFUNCTION()
 	float ExtractProba(AAIController* Controller, UObject* ContextData);
 	
+	UFUNCTION()
+	void AskInterrupt(AAIController* Controller);
+	
 	virtual void Tick(float DeltaTime) override;
 	virtual bool IsTickable() const override;
 	virtual bool IsTickableInEditor() const override;
@@ -100,6 +103,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	bool bInterrupted {false};
 	float Proba {0.0f};
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bAskedForInterruption {false};
 
 	UPROPERTY(BlueprintReadOnly)
 	bool ConsumedReaction {false};
