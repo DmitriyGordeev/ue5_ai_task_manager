@@ -21,11 +21,10 @@ float UAIBaseTask::FindProba_Implementation(AAIController* Controller, UObject* 
 	return Proba;
 }
 
-// float UAIBaseTask::FindProba_Implementation(AAIController* Controller, UObject* ContextData)
-// {
-// 	Proba = 1.0f;
-// 	return Proba;
-// }
+bool UAIBaseTask::ShouldBeIgnored_Implementation(AAIController* Controller, UObject* ContextData)
+{
+	return false;
+}
 
 void UAIBaseTask::Reset()
 {
@@ -35,12 +34,23 @@ void UAIBaseTask::Reset()
 	UE_LOG(LogTemp, Log, TEXT("Reset() task %s"), *GetName());
 }
 
+void UAIBaseTask::SetConsumedReaction(bool Consumed)
+{
+	ConsumedReaction = Consumed;
+}
+
 float UAIBaseTask::ExtractProba(AAIController* Controller, UObject* ContextData)
 {
+	// if (ShouldBeIgnored(Controller, ContextData))
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("Task %s was ignored"), *GetName());
+	// 	Proba = 0.0f;
+	// 	return Proba;
+	// }
+	
 	Proba = FindProba(Controller, ContextData);
 	Proba = Proba > 1.0f ? 1.0f : Proba;
 	Proba = Proba < 0.0f ? 0.0f : Proba;
-	UE_LOG(LogTemp, Log, TEXT("Clamped Proba = %f"), Proba);
 	return Proba;
 }
 
@@ -129,12 +139,6 @@ bool UAIBaseTask::IsInterrupted() const
 {
 	UE_LOG(LogTemp, Log, TEXT("IsInterrupted() = %i"), bInterrupted);
 	return bInterrupted;
-}
-
-float UAIBaseTask::GetProba() const
-{
-	UE_LOG(LogTemp, Log, TEXT("UAIBaseTask::GetProba() = %f"), Proba);
-	return Proba;
 }
 
 void UAIBaseTask::SetTaskManager(UAITaskManager* OwnerTaskManager)

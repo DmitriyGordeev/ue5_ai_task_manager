@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "AIBaseTask.h"
 #include "AIController.h"
+#include "AIReaction.h"
+#include "Containers/Deque.h"
 #include "Templates/Tuple.h"
 #include "AITaskManager.generated.h"
 
@@ -55,6 +57,8 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	UAIBaseTask* ActiveTask;
 
+	UFUNCTION(BlueprintCallable)
+	void ConsumeReaction(int32 ReactionType);
 
 	// -------- FTickableGameObject functions --------------
 	virtual void Tick(float DeltaTime) override;
@@ -76,6 +80,12 @@ public:
 	
 	bool CheckRecalculateCooldownIsReady();
 
+	bool FindReactionInQueue(UAIBaseTask* FromTask, int32 EnumIndex) const;
+
+
+protected:
+	TTuple<UAIBaseTask*, int> CompareTwoTasks(UAIBaseTask* T1, UAIBaseTask* T2, int Index1, int Index2);
+	
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	TArray<UAIBaseTask*> Tasks;
@@ -85,8 +95,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	bool bWaitingForActiveTaskInterrupted {false};
 
-	// TODO: пояснить
+	// pair-wise priority for each task
 	TMap<TTuple<int, int>, int> PriorityMatrix;
+	
+	// TDeque<TTuple<int32, bool>> ReactionQueue;
+	TMap<int32, bool> Reactions;
 	
 	int64 LastRecalcUnixTime {0};
 };

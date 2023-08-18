@@ -38,6 +38,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	float FindProba(AAIController* Controller, UObject* ContextData);
 
+	UFUNCTION(BlueprintNativeEvent)
+	bool ShouldBeIgnored(AAIController* Controller, UObject* ContextData);
+
+	
 	/** Simple wrapper-setter around blueprint-implementable FindProba()
 	 * this function forces to set Proba field after calculation, which BP user can forget to do */
 	UFUNCTION()
@@ -60,7 +64,7 @@ public:
 	virtual bool IsCompleted() const;
 	virtual bool IsInterrupted() const;
 
-	virtual float GetProba() const;
+	virtual float GetProba() const { return Proba; }
 
 	UFUNCTION()
 	void SetTaskManager(UAITaskManager* TaskManager);
@@ -76,6 +80,12 @@ public:
 	 * */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bShouldRestartIfWinnerAgain {true};
+
+	UFUNCTION()
+	void SetConsumedReaction(bool Consumed);
+
+	UFUNCTION(BlueprintCallable)
+	bool GetConsumedReaction() const { return ConsumedReaction; }
 	
 protected:
 	UPROPERTY(BlueprintReadOnly)
@@ -90,4 +100,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	bool bInterrupted {false};
 	float Proba {0.0f};
+
+	UPROPERTY(BlueprintReadOnly)
+	bool ConsumedReaction {false};
 };

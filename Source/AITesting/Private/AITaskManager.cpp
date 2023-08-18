@@ -6,6 +6,7 @@
 
 
 #include "SAdvancedTransformInputBox.h"
+#include "Containers/Deque.h"
 #include "Engine/RendererSettings.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -36,41 +37,87 @@ void UAITaskManager::Recalculate()
 
 	LastRecalcUnixTime = FDateTime::Now().ToUnixTimestamp();
 	
-	UAIBaseTask* Winner = nullptr;
-	float MaxProbaSoFar = -1.0f;
-	float Proba = 0.0f;
+	UAIBaseTask* Winner = nullptr;		// todo: сделать первой - тогда луп нужно начинать с 1
+	// float MaxProbaSoFar = -1.0f;
+	// float Proba = 0.0f;
 	int WinnerIndex = -1;
 	
-	// TODO: распараллелить ? (могут быть проблемы, если FindProba пишет в ContextData)
 	for(auto i = 0; i < Tasks.Num(); i++)
 	{
-		Proba = Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
-
-		if (Proba > MaxProbaSoFar)
+		// early stop for comparing the task with others if specified explicitly (in BP)
+		if (Tasks[i]->ShouldBeIgnored(AIOwner.Get(), ContextData))
+			continue;
+		
+		const float Proba = Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
+		if (!Winner)
 		{
-			MaxProbaSoFar = Proba;
 			Winner = Tasks[i];
 			WinnerIndex = i;
+			// MaxProbaSoFar = Proba;
+			continue;
 		}
-		else if (Proba == MaxProbaSoFar)
+
+		if (Tasks[i]->GetConsumedReaction())
 		{
-			auto Pair = PriorityMatrix.Find(TTuple<int, int>(i, WinnerIndex));
-			if (Pair && *Pair < 0)
+			if (Winner->GetConsumedReaction())
 			{
-				UE_LOG(LogTemp, Log, TEXT("SORTING with PriorityMatrix = %i"), *Pair);
+				// if both winner and current task have consumed some reaction, we need
+				// to treat them as equal
+				TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
+				Winner = Tuple.Key;
+				WinnerIndex = Tuple.Value;
+				// MaxProbaSoFar = Winner->GetProba();
 				continue;
 			}
-
-			// Randomly choose between two tasks if they have equal probabilities
-			if (FMath::FRand() > 0.5f)
-			{
-				UE_LOG(LogTemp, Log, TEXT("Randomly choosing new task"));
-				MaxProbaSoFar = Proba;
-				Winner = Tasks[i];
-				WinnerIndex = i;
-			}
+			
+			// if Winner hasn't consumed any reaction,
+			// current task Tasks[i] should have more priority
+			Winner = Tasks[i];
+			WinnerIndex = i;
+			// MaxProbaSoFar = Winner->GetProba();
+			continue;
 		}
+
+		// If current task Tasks[i] hasn't consumed any reaction,
+		// but winner has, Winner has more priority
+		if (Winner->GetConsumedReaction())
+			continue;
+
+
+		// If both haven't consumed any reaction - compare them as equal
+		TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
+		Winner = Tuple.Key;
+		WinnerIndex = Tuple.Value;
+		// MaxProbaSoFar = Winner->GetProba();
+
+		
+		// if (Proba > MaxProbaSoFar)
+		// {
+		// 	MaxProbaSoFar = Proba;
+		// 	Winner = Tasks[i];
+		// 	WinnerIndex = i;
+		// }
+		// else if (Proba == MaxProbaSoFar)
+		// {
+		// 	auto Pair = PriorityMatrix.Find(TTuple<int, int>(i, WinnerIndex));
+		// 	if (Pair && *Pair < 0)
+		// 	{
+		// 		UE_LOG(LogTemp, Log, TEXT("SORTING with PriorityMatrix = %i"), *Pair);
+		// 		continue;
+		// 	}
+		//
+		// 	// Randomly choose between two tasks if they have equal probabilities
+		// 	if (FMath::FRand() > 0.5f)
+		// 	{
+		// 		UE_LOG(LogTemp, Log, TEXT("Randomly choosing new task"));
+		// 		MaxProbaSoFar = Proba;
+		// 		Winner = Tasks[i];
+		// 		WinnerIndex = i;
+		// 	}
+		// }
 	}
+
+	// TODO: убрать ConsumedReaction для всех тасков
 	
 	if (!Winner)
 	{
@@ -127,6 +174,20 @@ int UAITaskManager::AddTask(UAIBaseTask* Task)
 	return Tasks.Num() - 1;
 }
 
+
+void UAITaskManager::ConsumeReaction(int32 ReactionType)
+{
+	// 1. Добавить реакцию в очередь
+
+	// 2. вызвать recalculate
+
+	// 3. убрать из queue те реакции у которых Consumed=true;
+
+	Reactions[ReactionType] = false;
+
+	// todo: подумать про блок по времени
+	Recalculate();
+}
 
 void UAITaskManager::Tick(float DeltaTime)
 {
@@ -221,4 +282,48 @@ bool UAITaskManager::CheckRecalculateCooldownIsReady()
 		return true;
 	}
 	return (FDateTime::Now().ToUnixTimestamp() - LastRecalcUnixTime) > 1;
+}
+
+bool UAITaskManager::FindReactionInQueue(UAIBaseTask* FromTask, int32 ReactionType) const
+{
+	if (Reactions.Contains(ReactionType))
+	{
+		if (FromTask)
+			FromTask->SetConsumedReaction(true);
+		return true;
+	}
+	return false;
+}
+
+TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBaseTask* T2, int Index1, int Index2)
+{
+	if (!T1 || !T2)
+		return {nullptr, -1};
+
+	float Proba1 = T1->GetProba();
+	float Proba2 = T2->GetProba();
+
+	if (Proba1 > Proba2)
+		return {T1, Index1};
+
+	if (Proba1 == Proba2)
+	{
+		auto Pair = PriorityMatrix.Find(TTuple<int, int>(Index1, Index2));
+		if (Pair && *Pair < 0)
+		{
+			if (*Pair < 0)
+				return {T2, Index2};
+			if (*Pair > 0)
+				return {T1, Index1};
+		}
+
+		if (FMath::FRand() > 0.5f)
+		{
+			return {T1, Index1};
+		}
+		else
+			return {T2, Index2};
+	}
+
+	return {T2, Index2};
 }
