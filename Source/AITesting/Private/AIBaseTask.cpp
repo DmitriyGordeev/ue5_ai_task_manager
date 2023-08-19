@@ -31,6 +31,7 @@ void UAIBaseTask::Reset()
 	bRunning = false;
 	bCompleted = false;
 	bInterrupted = false;
+	bAskedForInterruption = false;
 	UE_LOG(LogTemp, Log, TEXT("Reset() task %s"), *GetName());
 }
 
@@ -94,6 +95,7 @@ void UAIBaseTask::MarkInterrupted()
 {
 	bInterrupted = true;
 	bRunning = false;	// todo: убрать флаг bRunning
+	bAskedForInterruption = false;
 	UE_LOG(LogTemp, Log, TEXT("Task marked as interrupted"));
 }
 
