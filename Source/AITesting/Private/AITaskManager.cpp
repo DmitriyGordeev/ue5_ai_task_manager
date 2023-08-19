@@ -6,6 +6,7 @@
 
 
 #include "SAdvancedTransformInputBox.h"
+#include "BehaviorTree/BehaviorTreeTypes.h"
 #include "Containers/Deque.h"
 #include "Engine/RendererSettings.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
@@ -32,31 +33,26 @@ void UAITaskManager::Recalculate()
 	{
 		return;
 	}
+	
 
-	UE_LOG(LogTemp, Log, TEXT("[Before update] LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
+	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() [Before update] LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
 	LastRecalcUnixTime = GetCurrentMilliseconds();
-	UE_LOG(LogTemp, Log, TEXT("[After update] LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
+	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() [After update] LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
 	
 	UAIBaseTask* Winner = nullptr;
 	int WinnerIndex = -1;
-
-
-	// TODO: может ли быть так, что задача имеет вероятность Proba = 0.0,
-	//	но флаг GetConsumedReaction = true, а все остальные задачи имеют этот флаг false,
-	//	но proba не ноль
-	
 	
 	for(auto i = 0; i < Tasks.Num(); i++)
 	{
 		// early stop for comparing the task with others if specified explicitly (in BP)
-		if (Tasks[i]->ShouldBeIgnored(AIOwner.Get(), ContextData))
+		if (Tasks[i]->ShouldBeIgnored(AIOwner.Get()))
 		{
-			UE_LOG(LogTemp, Log, TEXT("Task %s ShouldBeIgnored = true"), *Tasks[i]->GetName());
+			UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s ShouldBeIgnored = true"), *Tasks[i]->GetName());
 			continue;
 		}
 		
-		Tasks[i]->ExtractProba(AIOwner.Get(), ContextData);
-		UE_LOG(LogTemp, Log, TEXT("Task %s -> ExtractProba = %f"), *Tasks[i]->GetName(), Tasks[i]->GetProba());
+		Tasks[i]->ExtractProba(AIOwner.Get());
+		UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s -> ExtractProba = %f"), *Tasks[i]->GetName(), Tasks[i]->GetProba());
 		
 		if (!Winner)
 		{
@@ -66,7 +62,7 @@ void UAITaskManager::Recalculate()
 		}
 
 		UE_LOG(LogTemp, Log,
-			TEXT("Task %s : GetConsumedReaction() = %i"),
+			TEXT("TaskManager::Recalculate() Task %s : GetConsumedReaction() = %i"),
 			*Tasks[i]->GetName(),
 			Tasks[i]->GetConsumedReaction()
 			);
@@ -104,65 +100,87 @@ void UAITaskManager::Recalculate()
 		Winner = Tuple.Key;
 		WinnerIndex = Tuple.Value;
 	}
-
-	
-	// Cleanup all reaction from Reactions map which were marked Consumed
-	const int64 TimeNow = GetCurrentMilliseconds();
-	for(const auto& t : Reactions)
-	{
-		// remove reaction if it was Consumed by whatever task,
-		// or if it's expired
-		if (t.Value.Consumed || TimeNow >= t.Value.LifeTimeMs + t.Value.StartTime)
-		{
-			Reactions.Remove(t.Key);
-			UE_LOG(LogTemp, Log, TEXT("EReaction %i was removed"), t.Key);
-		}
-	}
 	
 	
 	if (!Winner)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Winner is null"));
+		UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Winner is null"));
 		return;
 	}
 	
 	if (Winner->GetProba() <= 0.0f)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Winner(%s)->GetProba = 0.0f"), *Winner->GetName());
-		return;
-	}
-	
-	if (ActiveTask && Winner == ActiveTask)
-	{
-		if (ActiveTask->bShouldRestartIfWinnerAgain)
-		{
-			UE_LOG(LogTemp, Log, TEXT("Restaring the same Task because it's a winner again"));
-			ActiveTask->Reset();
-			ActiveTask->Start();
-		}
+		UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Winner(%s)->GetProba = 0.0f"), *Winner->GetName());
 		return;
 	}
 	
 	if (ActiveTask)
-		ActiveTask->Reset();
+	{
+		UE_LOG(LogTemp, Log, TEXT("TaskManager::ActiveTask %s"), *ActiveTask->GetName());
+		
+		if (Winner == ActiveTask)
+		{
+			UE_LOG(LogTemp, Log, TEXT("TaskManager: Winner == ActiveTask %s"), *ActiveTask->GetName());
+			if (ActiveTask->IsRunning() && !ActiveTask->bShouldRestartIfWinnerAgain)
+				return;
+		}
+
+		if (ActiveTask->IsRunning())
+		{
+			UE_LOG(LogTemp, Log, TEXT("TaskManager::ActiveTask %s IsRunning() = true"), *ActiveTask->GetName());
+			if (!TryInterruptActiveTask())
+				return;
+		}
+		else if (ActiveTask->IsCompleted() || ActiveTask->IsInterrupted())
+		{
+			UE_LOG(LogTemp, Log, TEXT("TaskManager::ActiveTask( %s )->IsCompleted() or IsInterrupted() = true"), *ActiveTask->GetName());
+			ActiveTask->Reset();
+		}
+	}
 	
-	UE_LOG(LogTemp, Log, TEXT("Winner Task Name = %s"), *Winner->GetName());
+	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Winner Task Name = %s"), *Winner->GetName());
+
+	// Cleanup all reaction from Reactions map which were marked Consumed or expired
+	// TODO: завернуть в функцию
+	const int64 TimeNow = GetCurrentMilliseconds();
+	for(const auto& t : Reactions)
+	{
+		if (t.Value.Consumed || TimeNow >= t.Value.LifeTimeMs + t.Value.StartTime)
+		{
+			UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() EReaction %i is to be removed"), t.Key);
+			Reactions.Remove(t.Key);
+		}
+	}
 	
 	ActiveTask = Winner;
+	Winner->SelectAsWinner(GetCurrentMilliseconds());
 	Winner->Start();
 }
 
 bool UAITaskManager::TryInterruptActiveTask()
 {
-	UE_LOG(LogTemp, Log, TEXT("RequestInterruptActive"));
+	// UE_LOG(LogTemp, Log, TEXT("RequestInterruptActive"));
+	// bWaitingForActiveTaskInterrupted = true;
+	// if (!ActiveTask)
+	// 	return true;
+	//
+	// if (AIOwner.IsValid())
+	// 	ActiveTask->OnInterruptedResponse(AIOwner.Get());
+	//
+	// return ActiveTask->IsInterrupted();
+
+
+	UE_LOG(LogTemp, Log, TEXT("TaskManager::RequestInterruptActive"));
 	bWaitingForActiveTaskInterrupted = true;
 	if (!ActiveTask)
 		return true;
 
 	if (AIOwner.IsValid())
-		ActiveTask->OnInterruptedResponse(AIOwner.Get());
+	{
+		ActiveTask->AskInterrupt(AIOwner.Get());
+	}
 
-	return ActiveTask->IsInterrupted();
+	return ActiveTask->IsInterrupted() || ActiveTask->IsCompleted();
 }
 
 int UAITaskManager::AddTask(UAIBaseTask* Task)
@@ -178,7 +196,6 @@ int UAITaskManager::AddTask(UAIBaseTask* Task)
 
 void UAITaskManager::ConsumeReaction(int32 ReactionType, int64 LifeTimeMs)
 {	
-	
 	LifeTimeMs = LifeTimeMs < 0 ? 0 : LifeTimeMs;
 	
 	Reactions.Add(ReactionType, {

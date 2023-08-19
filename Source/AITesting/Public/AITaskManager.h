@@ -69,9 +69,9 @@ public:
 	virtual UWorld* GetWorld() const override;
 
 
-	// TODO: Move to protected ?
-	UPROPERTY(BlueprintReadWrite)
-	UObject* ContextData;
+	// // TODO: Move to protected ?
+	// UPROPERTY(BlueprintReadWrite)
+	// UObject* ContextData;
 
 	/** Tells TaskManager that Task with TaskIndex1 should have greater priority
 	 * over TaskIndex2 in case both tasks have the same probas */

@@ -15,13 +15,13 @@ void UAIBaseTask::Start()
 	OnExecute(GetAIController());
 }
 
-float UAIBaseTask::FindProba_Implementation(AAIController* Controller, UObject* ContextData)
+float UAIBaseTask::FindProba_Implementation(AAIController* Controller)
 {
 	Proba = 1.0f;
 	return Proba;
 }
 
-bool UAIBaseTask::ShouldBeIgnored_Implementation(AAIController* Controller, UObject* ContextData)
+bool UAIBaseTask::ShouldBeIgnored_Implementation(AAIController* Controller)
 {
 	return false;
 }
@@ -39,9 +39,9 @@ void UAIBaseTask::SetConsumedReaction(bool Consumed)
 	ConsumedReaction = Consumed;
 }
 
-float UAIBaseTask::ExtractProba(AAIController* Controller, UObject* ContextData)
+float UAIBaseTask::ExtractProba(AAIController* Controller)
 {
-	Proba = FindProba(Controller, ContextData);
+	Proba = FindProba(Controller);
 	Proba = Proba > 1.0f ? 1.0f : Proba;
 	Proba = Proba < 0.0f ? 0.0f : Proba;
 	return Proba;
@@ -49,6 +49,7 @@ float UAIBaseTask::ExtractProba(AAIController* Controller, UObject* ContextData)
 
 void UAIBaseTask::AskInterrupt(AAIController* Controller)
 {
+	UE_LOG(LogTemp, Log, TEXT("Task %s -> AskInterrupt()"), *GetName());
 	bAskedForInterruption = true;
 	OnInterruptedResponse(Controller);
 }
@@ -84,18 +85,16 @@ bool UAIBaseTask::IsTickableWhenPaused() const
 void UAIBaseTask::MarkCompleted()
 {
 	bCompleted = true;
+	bRunning = false;
 	UE_LOG(LogTemp, Log, TEXT("Task marked as completed"));
-	
-	// TODO: notify up to TaskManager ?
 }
 
 
 void UAIBaseTask::MarkInterrupted()
 {
 	bInterrupted = true;
+	bRunning = false;	// todo: убрать флаг bRunning
 	UE_LOG(LogTemp, Log, TEXT("Task marked as interrupted"));
-	
-	// TODO: notify up to TaskManager ?
 }
 
 
@@ -127,6 +126,12 @@ UWorld* UAIBaseTask::GetWorld() const
 	return nullptr;
 }
 
+bool UAIBaseTask::IsRunning() const
+{
+	UE_LOG(LogTemp, Log, TEXT("%s IsRunning() = %i"), *GetName(), bRunning);
+	return bRunning;
+}
+
 
 bool UAIBaseTask::IsCompleted() const
 {
@@ -153,3 +158,14 @@ AAIController* UAIBaseTask::GetAIController()
 	return TaskManager->AIOwner.Get();
 }
 
+
+bool UAIBaseTask::IsReadyToBeWinner(int32 NewTimeMs) const
+{
+	return NewTimeMs - LastWinningTimeMs > WinnerCooldownTimeMs;
+}
+
+void UAIBaseTask::SelectAsWinner(int32 NewTimeMs)
+{
+	// UE_LOG(LogTemp, Log, TEXT("Task %s selected as winner at %i"), *GetName(), NewTimeMs);
+	LastWinningTimeMs = NewTimeMs;
+}

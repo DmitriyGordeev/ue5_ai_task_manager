@@ -36,16 +36,15 @@ public:
 	virtual void Start();
 	
 	UFUNCTION(BlueprintNativeEvent)
-	float FindProba(AAIController* Controller, UObject* ContextData);
+	float FindProba(AAIController* Controller);
 
 	UFUNCTION(BlueprintNativeEvent)
-	bool ShouldBeIgnored(AAIController* Controller, UObject* ContextData);
-
+	bool ShouldBeIgnored(AAIController* Controller);
 	
 	/** Simple wrapper-setter around blueprint-implementable FindProba()
 	 * this function forces to set Proba field after calculation, which BP user can forget to do */
 	UFUNCTION()
-	float ExtractProba(AAIController* Controller, UObject* ContextData);
+	float ExtractProba(AAIController* Controller);
 	
 	UFUNCTION()
 	void AskInterrupt(AAIController* Controller);
@@ -64,6 +63,7 @@ public:
 	virtual TStatId GetStatId() const override;
 	virtual UWorld* GetWorld() const override;
 
+	virtual bool IsRunning() const;
 	virtual bool IsCompleted() const;
 	virtual bool IsInterrupted() const;
 
@@ -89,6 +89,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool GetConsumedReaction() const { return ConsumedReaction; }
+
+	/** Imposes cooldown on the task -
+	 * prevents from picking the same Task too often if necessary */
+	bool IsReadyToBeWinner(int32 NewTimeMs) const;
+	
+	void SelectAsWinner(int32 NewTimeMs);
 	
 protected:
 	UPROPERTY(BlueprintReadOnly)
@@ -109,4 +115,10 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool ConsumedReaction {false};
+
+	/** How often can be picked as a winner, specified in milliseconds */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin=0, UIMin=0))
+	int32 WinnerCooldownTimeMs {0};
+	
+	int32 LastWinningTimeMs;
 };
