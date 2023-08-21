@@ -118,13 +118,10 @@ UWorld* UAIBaseTask::GetWorld() const
 		AActor* Outer = GetTypedOuter<AActor>();
 		if (Outer != nullptr)
 		{
-			UE_LOG(LogTemp, Display, TEXT("AIBaseTask::GetWorld() => Sucessfully GetWorld()"));
 			return Outer->GetWorld();
 		}
 	}
 	
-	// Else return null - the latent action will fail to initialize
-	UE_LOG(LogTemp, Display, TEXT("World is null"));
 	return nullptr;
 }
 
@@ -168,6 +165,5 @@ bool UAIBaseTask::IsReadyToBeWinner(int32 NewTimeMs) const
 
 void UAIBaseTask::SelectAsWinner(int32 NewTimeMs)
 {
-	// UE_LOG(LogTemp, Log, TEXT("Task %s selected as winner at %i"), *GetName(), NewTimeMs);
 	LastWinningTimeMs = NewTimeMs;
 }

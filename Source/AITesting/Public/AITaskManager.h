@@ -98,6 +98,9 @@ protected:
 	
 	bool bStarted {false};
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	int32 UpdateFreqMs {0};
+
 	UPROPERTY(BlueprintReadOnly)
 	bool bWaitingForActiveTaskInterrupted {false};
 

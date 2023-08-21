@@ -8,8 +8,6 @@
 #include "SAdvancedTransformInputBox.h"
 #include "BehaviorTree/BehaviorTreeTypes.h"
 #include "Containers/Deque.h"
-#include "Engine/RendererSettings.h"
-#include "GenericPlatform/GenericPlatformProcess.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
@@ -52,6 +50,9 @@ void UAITaskManager::Recalculate()
 		}
 		
 		Tasks[i]->ExtractProba(AIOwner.Get());
+		if (Tasks[i]->GetProba() == 0.0f)
+			continue;
+		
 		UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s -> ExtractProba = %f"), *Tasks[i]->GetName(), Tasks[i]->GetProba());
 		
 		if (!Winner)
@@ -100,7 +101,8 @@ void UAITaskManager::Recalculate()
 		Winner = Tuple.Key;
 		WinnerIndex = Tuple.Value;
 	}
-	
+
+	UE_LOG(LogTemp, Log, TEXT("[Loop] Winner = %s"), *Winner->GetName());
 	
 	if (!Winner)
 	{
@@ -153,6 +155,7 @@ void UAITaskManager::Recalculate()
 	}
 	
 	ActiveTask = Winner;
+	UE_LOG(LogTemp, Log, TEXT("Selecting task %s as Winner"), *ActiveTask->GetName());
 	Winner->SelectAsWinner(GetCurrentMilliseconds());
 	Winner->Start();
 }
@@ -301,7 +304,7 @@ bool UAITaskManager::CheckRecalculateCooldownIsReady()
 		LastRecalcUnixTime = GetCurrentMilliseconds();
 		return true;
 	}
-	return (GetCurrentMilliseconds() - LastRecalcUnixTime) > 0;
+	return (GetCurrentMilliseconds() - LastRecalcUnixTime) > UpdateFreqMs;
 }
 
 bool UAITaskManager::TryActivateReaction(UAIBaseTask* FromTask, int32 ReactionType)
@@ -323,47 +326,71 @@ TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBa
 
 	float Proba1 = T1->GetProba();
 	float Proba2 = T2->GetProba();
+	UE_LOG(LogTemp, Log, TEXT("CompareTwoTasks(%s, %s): proba1 = %f, proba2 = %f"),
+		*T1->GetName(),
+		*T2->GetName(),
+		Proba1,
+		Proba2);
 
 	if (Proba1 > Proba2)
 	{
+		UE_LOG(LogTemp, Log, TEXT("T1(%s) is Winner"), *T1->GetName());
 		T2->SetConsumedReaction(false);
 		return {T1, Index1};
 	}
 	
 	if (Proba1 == Proba2)
 	{
+		
 		auto Pair = PriorityMatrix.Find(TTuple<int, int>(Index1, Index2));
 		if (Pair && *Pair < 0)
 		{
 			if (*Pair < 0)
 			{
+				UE_LOG(LogTemp, Log, TEXT("Selecting with Priority matrix T2(%s) is Winner"), *T2->GetName());
 				T1->SetConsumedReaction(false);
 				return {T2, Index2};
 			}
 				
 			if (*Pair > 0)
 			{
+				UE_LOG(LogTemp, Log, TEXT("Selecting with Priority matrix T1(%s) is Winner"), *T1->GetName());
 				T2->SetConsumedReaction(false);
 				return {T1, Index1};
 			}
 				
 		}
 
-		auto p = FMath::FRand();
-		UE_LOG(LogTemp, Log, TEXT("Selecting random task of two, p = %f"), p);
-		if (p > 0.5f)
+		const auto TossedValue = FMath::FRand();
+		UE_LOG(LogTemp, Log, TEXT("Selecting random task of two, p = %f"), TossedValue);
+
+		float ProbaSum = T1->GetProba() + T2->GetProba();
+		if (ProbaSum == 0.0f)
 		{
+			UE_LOG(LogTemp, Log, TEXT("Probasum = 0.0f -> T1(%s) is Winner"), *T1->GetName());
+			return {T1, Index1};
+		}
+			
+
+		// TODO: протестировать
+		float P1 = T1->GetProba() / ProbaSum;
+		// float P2 = T2->GetProba() / ProbaSum;
+		if (TossedValue < P1)
+		{
+			UE_LOG(LogTemp, Log, TEXT("\tP1(normalized) = %f -> T1(%s) is Winner"), P1, *T1->GetName());
 			T2->SetConsumedReaction(false);
 			return {T1, Index1};
 		}
 		else
 		{
+			UE_LOG(LogTemp, Log, TEXT("\tP2(normalized) = %f -> T2(%s) is Winner"), (1.0f - P1), *T2->GetName());
 			T1->SetConsumedReaction(false);
 			return {T2, Index2};
 		}
 	}
 
 	T1->SetConsumedReaction(false);
+	UE_LOG(LogTemp, Log, TEXT("\tDefault return T2(%s)"), *T2->GetName());
 	return {T2, Index2};
 }
 
