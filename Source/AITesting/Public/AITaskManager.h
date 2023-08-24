@@ -6,7 +6,7 @@
 #include "AIBaseTask.h"
 #include "AIController.h"
 #include "AIReaction.h"
-#include "Containers/Deque.h"
+#include "Containers/RingBuffer.h"
 #include "Templates/Tuple.h"
 #include "AITaskManager.generated.h"
 
@@ -22,6 +22,8 @@ class AITESTING_API UAITaskManager : public UObject, public FTickableGameObject
 	GENERATED_BODY()
 
 public:
+	UAITaskManager();
+	// UAITaskManager(const FObjectInitializer&);
 	
 	// нужно было включить AIModule в *.Build.cs
 	// иначе доступ к AAIController вызовет 'unresolved external symbol error'
@@ -110,4 +112,18 @@ protected:
 	TMap<int32, AIReaction> Reactions;
 	
 	int64 LastRecalcUnixTime {0};
+
+	// Stores previously executed tasks,
+	// the end of the queue is the task executed right before ActiveTask
+	TRingBuffer<UAIBaseTask*> TaskQueue;
+		
+	// How much tasks to save up in the queue.
+	// By default = 0 meaning we don't want to store any
+	// information about previously executed tasks
+	// todo: добавить UPROP на макс / мин значения ?
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	int TaskQueueSize {0};
+
+	// TODO: запланировать цепочку задач
+	// TODO: ForceExecuteTask() ?
 };

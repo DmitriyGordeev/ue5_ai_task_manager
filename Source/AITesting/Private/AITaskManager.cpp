@@ -5,17 +5,23 @@
 #include "MyRunnable.h"
 
 
-#include "SAdvancedTransformInputBox.h"
-#include "BehaviorTree/BehaviorTreeTypes.h"
-#include "Containers/Deque.h"
+// #include "SAdvancedTransformInputBox.h"
+// #include "BehaviorTree/BehaviorTreeTypes.h"
+// #include "Containers/Deque.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
 // TODO: сделать общие коментарии после тестов
-
+UAITaskManager::UAITaskManager()
+{
+	ActiveTask = nullptr;
+	
+}
 
 void UAITaskManager::Start()
 {
+	TaskQueue.Reserve(TaskQueueSize);
+	
 	bStarted = true;
 	Recalculate();
 }
@@ -101,14 +107,15 @@ void UAITaskManager::Recalculate()
 		Winner = Tuple.Key;
 		WinnerIndex = Tuple.Value;
 	}
-
-	UE_LOG(LogTemp, Log, TEXT("[Loop] Winner = %s"), *Winner->GetName());
+	
 	
 	if (!Winner)
 	{
 		UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Winner is null"));
 		return;
 	}
+	
+	UE_LOG(LogTemp, Log, TEXT("[Loop] Winner = %s"), *Winner->GetName());
 	
 	if (Winner->GetProba() <= 0.0f)
 	{
@@ -153,9 +160,42 @@ void UAITaskManager::Recalculate()
 			Reactions.Remove(t.Key);
 		}
 	}
+
+	
+	// Update TaskQueue
+	if (ActiveTask)
+	{
+		// UE_LOG(LogTemp, Log, TEXT("Current ActiveTask before change = %s"),
+		// 	*ActiveTask->GetName());
+		//
+		// UE_LOG(LogTemp, Log, TEXT("TaskQueue size = %i / %i"),
+		// 	TaskQueue.Num(), TaskQueue.Max());
+		//
+		// // Print tasks (debug)
+		// for(auto itr = TaskQueue.begin();
+		// 	itr != TaskQueue.end(); ++itr)
+		// {
+		// 	if (*itr)
+		// 	{
+		// 		UE_LOG(LogTemp, Log,
+		// 			TEXT("TaskQueue: Task name = %s"),
+		// 			*(*itr)->GetName());
+		// 	}
+		// 	else
+		// 		UE_LOG(LogTemp, Log,
+		// 			TEXT("TaskQueue: itr points to null"))
+		// }
+
+		// TODO: Enqueue() ?
+		TaskQueue.AddFront(ActiveTask);
+		if (TaskQueue.Num() > TaskQueueSize)
+			TaskQueue.Pop();
+	}
+	
 	
 	ActiveTask = Winner;
 	UE_LOG(LogTemp, Log, TEXT("Selecting task %s as Winner"), *ActiveTask->GetName());
+	
 	Winner->SelectAsWinner(GetCurrentMilliseconds());
 	Winner->Start();
 }
