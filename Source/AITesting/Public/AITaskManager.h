@@ -100,6 +100,14 @@ public:
 protected:
 	TTuple<UAIBaseTask*, int> CompareTwoTasks(UAIBaseTask* T1, UAIBaseTask* T2, int Index1, int Index2);
 
+	/* Loops through available tasks and identify current winner -
+	 * task with the highest probability or random,
+	 * if more than one are equally probable */
+	UAIBaseTask* FindWinnerTask();
+	
+	/* Removes reations which are marked as
+	 * Consumed=True or expired by its lifetime */
+	void CleanupReactions();
 	
 protected:
 	UPROPERTY(BlueprintReadWrite)

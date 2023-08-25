@@ -37,76 +37,75 @@ void UAITaskManager::Recalculate()
 	{
 		return;
 	}
-	
-
-	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() [Before update] LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
 	LastRecalcUnixTime = GetCurrentMilliseconds();
-	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() [After update] LastRecalcUnitTime = %lld"), LastRecalcUnixTime);
 	
-	UAIBaseTask* Winner = nullptr;
-	int WinnerIndex = -1;
+	// UAIBaseTask* Winner = nullptr;
+	// int WinnerIndex = -1;
+	//
+	// for(auto i = 0; i < Tasks.Num(); i++)
+	// {
+	// 	// early stop for comparing the task with others if specified explicitly (in BP)
+	// 	if (Tasks[i]->ShouldBeIgnored(AIOwner.Get()))
+	// 	{
+	// 		UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s ShouldBeIgnored = true"), *Tasks[i]->GetName());
+	// 		continue;
+	// 	}
+	// 	
+	// 	Tasks[i]->ExtractProba(AIOwner.Get());
+	// 	if (Tasks[i]->GetProba() == 0.0f)
+	// 		continue;
+	// 	
+	// 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s -> ExtractProba = %f"), *Tasks[i]->GetName(), Tasks[i]->GetProba());
+	// 	
+	// 	if (!Winner)
+	// 	{
+	// 		Winner = Tasks[i];
+	// 		WinnerIndex = i;
+	// 		continue;
+	// 	}
+	//
+	// 	UE_LOG(LogTemp, Log,
+	// 		TEXT("TaskManager::Recalculate() Task %s : GetConsumedReaction() = %i"),
+	// 		*Tasks[i]->GetName(),
+	// 		Tasks[i]->GetConsumedReaction()
+	// 		);
+	//
+	// 	if (Tasks[i]->GetConsumedReaction())
+	// 	{
+	// 		// if both winner and current task have consumed some reaction, we need
+	// 		// to treat them as equal
+	// 		if (Winner->GetConsumedReaction())
+	// 		{
+	// 			TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
+	// 			Winner = Tuple.Key;
+	// 			WinnerIndex = Tuple.Value;
+	// 			continue;
+	// 		}
+	//
+	// 		// if Winner hasn't consumed any reaction,
+	// 		// current task Tasks[i] should have more priority
+	// 		// (except only if Tasks[i] itself has Proba = 0)
+	// 		if (Tasks[i]->GetProba() > 0.0f)
+	// 		{
+	// 			Winner = Tasks[i];
+	// 			WinnerIndex = i;
+	// 			continue;
+	// 		}
+	// 	}
+	//
+	// 	// If current task Tasks[i] hasn't consumed any reaction,
+	// 	// but winner has, Winner has more priority
+	// 	if (Winner->GetConsumedReaction())
+	// 		continue;
+	// 	
+	// 	// If both haven't consumed any reaction - compare them as equal
+	// 	TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
+	// 	Winner = Tuple.Key;
+	// 	WinnerIndex = Tuple.Value;
+	// }
+
 	
-	for(auto i = 0; i < Tasks.Num(); i++)
-	{
-		// early stop for comparing the task with others if specified explicitly (in BP)
-		if (Tasks[i]->ShouldBeIgnored(AIOwner.Get()))
-		{
-			UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s ShouldBeIgnored = true"), *Tasks[i]->GetName());
-			continue;
-		}
-		
-		Tasks[i]->ExtractProba(AIOwner.Get());
-		if (Tasks[i]->GetProba() == 0.0f)
-			continue;
-		
-		UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s -> ExtractProba = %f"), *Tasks[i]->GetName(), Tasks[i]->GetProba());
-		
-		if (!Winner)
-		{
-			Winner = Tasks[i];
-			WinnerIndex = i;
-			continue;
-		}
-
-		UE_LOG(LogTemp, Log,
-			TEXT("TaskManager::Recalculate() Task %s : GetConsumedReaction() = %i"),
-			*Tasks[i]->GetName(),
-			Tasks[i]->GetConsumedReaction()
-			);
-
-		if (Tasks[i]->GetConsumedReaction())
-		{
-			// if both winner and current task have consumed some reaction, we need
-			// to treat them as equal
-			if (Winner->GetConsumedReaction())
-			{
-				TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
-				Winner = Tuple.Key;
-				WinnerIndex = Tuple.Value;
-				continue;
-			}
-
-			// if Winner hasn't consumed any reaction,
-			// current task Tasks[i] should have more priority
-			// (except only if Tasks[i] itself has Proba = 0)
-			if (Tasks[i]->GetProba() > 0.0f)
-			{
-				Winner = Tasks[i];
-				WinnerIndex = i;
-				continue;
-			}
-		}
-
-		// If current task Tasks[i] hasn't consumed any reaction,
-		// but winner has, Winner has more priority
-		if (Winner->GetConsumedReaction())
-			continue;
-		
-		// If both haven't consumed any reaction - compare them as equal
-		TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
-		Winner = Tuple.Key;
-		WinnerIndex = Tuple.Value;
-	}
+	auto Winner = FindWinnerTask();
 	
 	
 	if (!Winner)
@@ -115,7 +114,7 @@ void UAITaskManager::Recalculate()
 		return;
 	}
 	
-	// UE_LOG(LogTemp, Log, TEXT("[Loop] Winner = %s"), *Winner->GetName());
+	UE_LOG(LogTemp, Log, TEXT("[Loop] Winner = %s"), *Winner->GetName());
 	
 	if (Winner->GetProba() <= 0.0f)
 	{
@@ -150,17 +149,7 @@ void UAITaskManager::Recalculate()
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Winner Task Name = %s"), *Winner->GetName());
 
 	// Cleanup all reaction from Reactions map which were marked Consumed or expired
-	// TODO: завернуть в функцию
-	const int64 TimeNow = GetCurrentMilliseconds();
-	for(const auto& t : Reactions)
-	{
-		if (t.Value->Consumed || TimeNow >= t.Value->LifeTimeMs + t.Value->StartTime)
-		{
-			UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() EReaction %i is to be removed"), t.Key);
-			Reactions.Remove(t.Key);
-		}
-	}
-
+	CleanupReactions();
 	
 	// Update TaskQueue
 	if (ActiveTask)
@@ -401,6 +390,19 @@ TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBa
 	return {T2, Index2};
 }
 
+void UAITaskManager::CleanupReactions()
+{
+	const int64 TimeNow = GetCurrentMilliseconds();
+	for(const auto& t : Reactions)
+	{
+		if (t.Value->Consumed || TimeNow >= t.Value->LifeTimeMs + t.Value->StartTime)
+		{
+			UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() EReaction %i is to be removed"), t.Key);
+			Reactions.Remove(t.Key);
+		}
+	}
+}
+
 int64 UAITaskManager::GetCurrentMilliseconds()
 {
 	const auto CurrentTime = FDateTime::Now();
@@ -418,4 +420,74 @@ UAIBaseTask* UAITaskManager::GetPreviousActionFromQueue(int32 PreviousActionInde
 		return nullptr;
 
 	return TaskQueue[TaskQueue.Num() + PreviousActionIndex];
+}
+
+UAIBaseTask* UAITaskManager::FindWinnerTask()
+{
+	UAIBaseTask* Winner = nullptr;
+	int WinnerIndex = -1;
+	
+	for(auto i = 0; i < Tasks.Num(); i++)
+	{
+		// early stop for comparing the task with others if specified explicitly (in BP)
+		if (Tasks[i]->ShouldBeIgnored(AIOwner.Get()))
+		{
+			UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s ShouldBeIgnored = true"), *Tasks[i]->GetName());
+			continue;
+		}
+		
+		Tasks[i]->ExtractProba(AIOwner.Get());
+		if (Tasks[i]->GetProba() == 0.0f)
+			continue;
+		
+		UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() Task %s -> ExtractProba = %f"), *Tasks[i]->GetName(), Tasks[i]->GetProba());
+		
+		if (!Winner)
+		{
+			Winner = Tasks[i];
+			WinnerIndex = i;
+			continue;
+		}
+
+		UE_LOG(LogTemp, Log,
+			TEXT("TaskManager::Recalculate() Task %s : GetConsumedReaction() = %i"),
+			*Tasks[i]->GetName(),
+			Tasks[i]->GetConsumedReaction()
+			);
+
+		if (Tasks[i]->GetConsumedReaction())
+		{
+			// if both winner and current task have consumed some reaction, we need
+			// to treat them as equal
+			if (Winner->GetConsumedReaction())
+			{
+				TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
+				Winner = Tuple.Key;
+				WinnerIndex = Tuple.Value;
+				continue;
+			}
+
+			// if Winner hasn't consumed any reaction,
+			// current task Tasks[i] should have more priority
+			// (except only if Tasks[i] itself has Proba = 0)
+			if (Tasks[i]->GetProba() > 0.0f)
+			{
+				Winner = Tasks[i];
+				WinnerIndex = i;
+				continue;
+			}
+		}
+
+		// If current task Tasks[i] hasn't consumed any reaction,
+		// but winner has, Winner has more priority
+		if (Winner->GetConsumedReaction())
+			continue;
+		
+		// If both haven't consumed any reaction - compare them as equal
+		TTuple<UAIBaseTask*, int> Tuple = CompareTwoTasks(Tasks[i], Winner, i, WinnerIndex);
+		Winner = Tuple.Key;
+		WinnerIndex = Tuple.Value;
+	}
+
+	return Winner;
 }
