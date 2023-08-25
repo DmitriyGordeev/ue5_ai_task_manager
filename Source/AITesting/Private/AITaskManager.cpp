@@ -165,33 +165,11 @@ void UAITaskManager::Recalculate()
 	// Update TaskQueue
 	if (ActiveTask)
 	{
-		// UE_LOG(LogTemp, Log, TEXT("Current ActiveTask before change = %s"),
-		// 	*ActiveTask->GetName());
-		//
-		// UE_LOG(LogTemp, Log, TEXT("TaskQueue size = %i / %i"),
-		// 	TaskQueue.Num(), TaskQueue.Max());
-		//
-		// // Print tasks (debug)
-		// for(auto itr = TaskQueue.begin();
-		// 	itr != TaskQueue.end(); ++itr)
-		// {
-		// 	if (*itr)
-		// 	{
-		// 		UE_LOG(LogTemp, Log,
-		// 			TEXT("TaskQueue: Task name = %s"),
-		// 			*(*itr)->GetName());
-		// 	}
-		// 	else
-		// 		UE_LOG(LogTemp, Log,
-		// 			TEXT("TaskQueue: itr points to null"))
-		// }
-
 		// TODO: Enqueue() ?
 		TaskQueue.AddFront(ActiveTask);
 		if (TaskQueue.Num() > TaskQueueSize)
 			TaskQueue.Pop();
 	}
-	
 	
 	ActiveTask = Winner;
 	UE_LOG(LogTemp, Log, TEXT("Selecting task %s as Winner"), *ActiveTask->GetName());
@@ -202,17 +180,6 @@ void UAITaskManager::Recalculate()
 
 bool UAITaskManager::TryInterruptActiveTask()
 {
-	// UE_LOG(LogTemp, Log, TEXT("RequestInterruptActive"));
-	// bWaitingForActiveTaskInterrupted = true;
-	// if (!ActiveTask)
-	// 	return true;
-	//
-	// if (AIOwner.IsValid())
-	// 	ActiveTask->OnInterruptedResponse(AIOwner.Get());
-	//
-	// return ActiveTask->IsInterrupted();
-
-
 	UE_LOG(LogTemp, Log, TEXT("TaskManager::RequestInterruptActive"));
 	bWaitingForActiveTaskInterrupted = true;
 	if (!ActiveTask)
@@ -440,4 +407,15 @@ int64 UAITaskManager::GetCurrentMilliseconds()
 	return CurrentTime.GetMillisecond() +
 			CurrentTime.GetSecond() * 1000 +
 			CurrentTime.GetMinute() * 60 * 1000;
+}
+
+UAIBaseTask* UAITaskManager::GetPreviousActionFromQueue(int32 PreviousActionIndex)
+{
+	if (PreviousActionIndex >= 0)
+		return ActiveTask;
+
+	if (PreviousActionIndex < -TaskQueue.Num())
+		return nullptr;
+
+	return TaskQueue[TaskQueue.Num() + PreviousActionIndex];
 }

@@ -45,8 +45,8 @@ public:
 	
 	// virtual void Tick();
 	
-	// OnBeforeTaskChange
-	// OnAfterTaskChange
+	// TODO: OnBeforeTaskChange ?
+	// TODO: OnAfterTaskChange ?
 
 	/** Adds task to TaskManager
 	 * returns index of just added task in the array of tasks,
@@ -70,11 +70,6 @@ public:
 	virtual TStatId GetStatId() const override;
 	virtual UWorld* GetWorld() const override;
 
-
-	// // TODO: Move to protected ?
-	// UPROPERTY(BlueprintReadWrite)
-	// UObject* ContextData;
-
 	/** Tells TaskManager that Task with TaskIndex1 should have greater priority
 	 * over TaskIndex2 in case both tasks have the same probas */
 	UFUNCTION(BlueprintCallable)
@@ -87,8 +82,19 @@ public:
 	bool TryActivateReaction(UAIBaseTask* FromTask, int32 EnumIndex);
 
 	bool CheckRecalculateCooldownIsReady();
-
+	
 	static int64 GetCurrentMilliseconds();
+
+	/* Extracts Task that was executed NumActionBefore and is
+	 * currently stored in Queue.
+	 * @NumActionBefore:
+	 *		>= 0 is the current task,
+	 *		-1 is the previous task finished or interrupted,
+	 *		-2 is the task before the previous one, etc.
+	 * @Return: pointer to task of nullptr if queue is empty or index out of bounds		
+	 */
+	UFUNCTION(BlueprintCallable)
+	UAIBaseTask* GetPreviousActionFromQueue(int32 PreviousActionIndex);
 
 protected:
 	TTuple<UAIBaseTask*, int> CompareTwoTasks(UAIBaseTask* T1, UAIBaseTask* T2, int Index1, int Index2);
@@ -114,7 +120,8 @@ protected:
 	int64 LastRecalcUnixTime {0};
 
 	// Stores previously executed tasks,
-	// the end of the queue is the task executed right before ActiveTask
+	// the end of the queue is the task executed right
+	// before currently ActiveTask
 	TRingBuffer<UAIBaseTask*> TaskQueue;
 		
 	// How much tasks to save up in the queue.
