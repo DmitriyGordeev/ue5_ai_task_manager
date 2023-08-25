@@ -115,7 +115,7 @@ void UAITaskManager::Recalculate()
 		return;
 	}
 	
-	UE_LOG(LogTemp, Log, TEXT("[Loop] Winner = %s"), *Winner->GetName());
+	// UE_LOG(LogTemp, Log, TEXT("[Loop] Winner = %s"), *Winner->GetName());
 	
 	if (Winner->GetProba() <= 0.0f)
 	{
@@ -154,7 +154,7 @@ void UAITaskManager::Recalculate()
 	const int64 TimeNow = GetCurrentMilliseconds();
 	for(const auto& t : Reactions)
 	{
-		if (t.Value.Consumed || TimeNow >= t.Value.LifeTimeMs + t.Value.StartTime)
+		if (t.Value->Consumed || TimeNow >= t.Value->LifeTimeMs + t.Value->StartTime)
 		{
 			UE_LOG(LogTemp, Log, TEXT("TaskManager::Recalculate() EReaction %i is to be removed"), t.Key);
 			Reactions.Remove(t.Key);
@@ -208,15 +208,16 @@ void UAITaskManager::ConsumeReaction(int32 ReactionType, int64 LifeTimeMs)
 {	
 	LifeTimeMs = LifeTimeMs < 0 ? 0 : LifeTimeMs;
 	
-	Reactions.Add(ReactionType, {
+	Reactions.Emplace(
 		ReactionType,
-		false,
-		GetCurrentMilliseconds(),
-		LifeTimeMs});
+		MakeShared<AIReaction>(
+			ReactionType,
+			false,
+			GetCurrentMilliseconds(),
+			LifeTimeMs
+	));
 
 	UE_LOG(LogTemp, Log, TEXT("Consuming reaction type = %i, StartTime = %lld"), ReactionType, GetCurrentMilliseconds());
-
-	// todo: подумать про блок по времени
 	Recalculate();
 }
 
@@ -320,7 +321,7 @@ bool UAITaskManager::TryActivateReaction(UAIBaseTask* FromTask, int32 ReactionTy
 	{
 		if (FromTask)
 			FromTask->SetConsumedReaction(true);
-		Reactions[ReactionType].Consumed = true;
+		Reactions[ReactionType]->Consumed = true;
 		return true;
 	}
 	return false;
@@ -331,8 +332,8 @@ TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBa
 	if (!T1 || !T2)
 		return {nullptr, -1};
 
-	float Proba1 = T1->GetProba();
-	float Proba2 = T2->GetProba();
+	const float Proba1 = T1->GetProba();
+	const float Proba2 = T2->GetProba();
 	UE_LOG(LogTemp, Log, TEXT("CompareTwoTasks(%s, %s): proba1 = %f, proba2 = %f"),
 		*T1->GetName(),
 		*T2->GetName(),
@@ -371,7 +372,7 @@ TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBa
 		const auto TossedValue = FMath::FRand();
 		UE_LOG(LogTemp, Log, TEXT("Selecting random task of two, p = %f"), TossedValue);
 
-		float ProbaSum = T1->GetProba() + T2->GetProba();
+		const float ProbaSum = T1->GetProba() + T2->GetProba();
 		if (ProbaSum == 0.0f)
 		{
 			UE_LOG(LogTemp, Log, TEXT("Probasum = 0.0f -> T1(%s) is Winner"), *T1->GetName());
@@ -380,8 +381,7 @@ TTuple<UAIBaseTask*, int> UAITaskManager::CompareTwoTasks(UAIBaseTask* T1, UAIBa
 			
 
 		// TODO: протестировать
-		float P1 = T1->GetProba() / ProbaSum;
-		// float P2 = T2->GetProba() / ProbaSum;
+		const float P1 = T1->GetProba() / ProbaSum;
 		if (TossedValue < P1)
 		{
 			UE_LOG(LogTemp, Log, TEXT("\tP1(normalized) = %f -> T1(%s) is Winner"), P1, *T1->GetName());

@@ -96,6 +96,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UAIBaseTask* GetPreviousActionFromQueue(int32 PreviousActionIndex);
 
+	
 protected:
 	TTuple<UAIBaseTask*, int> CompareTwoTasks(UAIBaseTask* T1, UAIBaseTask* T2, int Index1, int Index2);
 
@@ -114,8 +115,13 @@ protected:
 
 	// pair-wise priority for each task
 	TMap<TTuple<int, int>, int> PriorityMatrix;
-	
-	TMap<int32, AIReaction> Reactions;
+
+	/* Reactions currently experienced by AI and are waiting
+	 * to be consumed by Tasks
+	 * @key = Index of reaction (can be created from Enum class by gamedesigner in BPs)
+	 * @value = AIReaction instance
+	 */
+	TMap<int32, TSharedPtr<AIReaction>> Reactions;
 	
 	int64 LastRecalcUnixTime {0};
 
@@ -130,7 +136,4 @@ protected:
 	// todo: добавить UPROP на макс / мин значения ?
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	int TaskQueueSize {0};
-
-	// TODO: запланировать цепочку задач
-	// TODO: ForceExecuteTask() ?
 };
